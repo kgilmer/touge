@@ -724,6 +724,18 @@ public class ReSTClient {
 	/**
 	 * Send a POST to the server.
 	 * 
+	 * @param url url of server.  If not String, toString() will be called.
+	 * @param body body of post as a String
+	 * @return a response to the request
+	 * @throws IOException on I/O error
+	 */
+	public Response<Integer> callPost(Object url, String body) throws IOException {
+		return call(HttpMethod.POST, url.toString(), HTTP_CODE_DESERIALIZER, new ByteArrayInputStream(body.getBytes()), null);
+	}
+	
+	/**
+	 * Send a POST to the server.
+	 * 
 	 * @param url url of server
 	 * @param formData Form data as strings.  
 	 * @return a response from the POST
@@ -975,7 +987,7 @@ public class ReSTClient {
 			else if (segment.length == 1)
 				return builder.append(segment[0]);
 			else
-				for (String seg : Arrays.asList(segment))
+				for (String seg : segment)
 					builder.append(seg);
 				
 		return builder;
@@ -1197,7 +1209,7 @@ public class ReSTClient {
 			if (sgmnts.length == 1)
 				appendSingle(sgmnts[0]);
 			else
-				for (String segment : Arrays.asList(sgmnts)) {
+				for (String segment : sgmnts) {
 					appendSingle(segment);
 				}
 			
@@ -1215,7 +1227,7 @@ public class ReSTClient {
 			if (segment.length() == 0)
 				return this;
 			else if (segment.indexOf('/', 1) > -1) {
-				for (String nseg : Arrays.asList(segment.split("/"))) 
+				for (String nseg : segment.split("/")) 
 					this.append(nseg);
 			} else if (segment.length() > 0) {
 				if (segment.toUpperCase().startsWith("HTTP:"))					
