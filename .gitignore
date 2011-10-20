@@ -1,0 +1,6 @@
+.settings/
+bin/
+.class
+build-common.xml
+*.jar
+classes/

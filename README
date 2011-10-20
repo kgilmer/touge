@@ -1,0 +1,3 @@
+This is a set of utility classes released into the public domain.  
+
+- restclient: a class to simplify java.net.HttpURLConnection for common rest-style API operations.
