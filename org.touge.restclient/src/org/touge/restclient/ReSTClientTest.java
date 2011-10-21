@@ -1,9 +1,10 @@
+// ### **ReSTClient** wraps java.net.HttpURLConnection and provides facilities for deserialization, explicit and implicit error handling, and request header initialization.
+// ReSTClient sources are [on GitHub](https://github.com/kgilmer/touge).
 /*
  * This file is in the public domain, furnished "as is", without technical
  * support, and with no warranty, express or implied, as to its usefulness for
  *	any purpose.
  */
-// ### **ReSTClient** wraps java.net.HttpURLConnection and provides facilities for deserialization, explicit and implicit error handling, and request header initialization.
 package org.touge.restclient;
 
 import java.io.ByteArrayInputStream;
@@ -18,7 +19,7 @@ import org.touge.restclient.ReSTClient.Response;
 import org.touge.restclient.ReSTClient.ResponseDeserializer;
 import org.touge.restclient.ReSTClient.URLBuilder;
 
-// ### This class shows examples of how to use ReSTClient.
+// ### Examples of how to use ReSTClient.
 public class ReSTClientTest {
 	
 	public static void main(String[] args) throws IOException {		
@@ -69,10 +70,6 @@ public class ReSTClientTest {
 				System.err.println("HTTP Error " + code + " occurred.");
 			}
 		});
-		
-		//When building URLs it can be nice to have something
-		//take care of the concatination, path seperators, and scheme.  
-		//URLBuilder is a static helper that does this.
 		
 		//Use URLBuilder to build a url.
 		URLBuilder localhost = restClient.buildURL("localhost");
@@ -179,6 +176,9 @@ public class ReSTClientTest {
 		
 		pl("should be false: " + mrc.isError());					
 
+		//When programmatically building URLs it can be nice to have something
+		//take care of the concatenation, path separators, and scheme.  
+		//URLBuilder is a static helper that does this.
 		
 		//This URLBuilder builds https://citibank.com/secureme/halp	
 		pl(
