@@ -3,6 +3,7 @@
  * support, and with no warranty, express or implied, as to its usefulness for
  *	any purpose.
  */
+// ### **ReSTClient** wraps java.net.HttpURLConnection and provides facilities for deserialization, explicit and implicit error handling, and request header initialization.
 package org.touge.restclient;
 
 import java.io.ByteArrayInputStream;
@@ -17,22 +18,28 @@ import org.touge.restclient.ReSTClient.Response;
 import org.touge.restclient.ReSTClient.ResponseDeserializer;
 import org.touge.restclient.ReSTClient.URLBuilder;
 
-
+// ### This class shows examples of how to use ReSTClient.
 public class ReSTClientTest {
 	
 	public static void main(String[] args) throws IOException {		
 		
 		ReSTClient restClient = new ReSTClient();
 				
-		//Simplest GET, with the short-form method.  Call get, and deserialize the response
-		//into a String.
-		System.out.println(
-				restClient.callGet("localhost"));		
+		//The most common simple thing to do is GET and return the body
+		//as a String.  ReSTClient:
+		String responseBody = 
+			restClient.callGet("localhost");		
 		
+		//Another common thing is to POST a String to a server:
+		restClient.callPost("localhost", "my content");
+		
+		//Getting more complex, we can specify a deserializer that will turn
+		//the server response into an Object our client wants.  Here we use
+		//one of the few predefined deserializers.
 		//Call GET on localhost using long form, pass in a predefined deserializer, no body (since GET), and no custom headers.
 		Response<String> resp = 
 			restClient.call(HttpMethod.GET, "localhost", ReSTClient.STRING_DESERIALIZER, null, null);
-		System.out.println("Response: " + resp.getContent());
+		pl("Response: " + resp.getContent());
 		
 		//Call get and provide a custom deserializer into a custom type.
 		Response<Double> cresp = 
@@ -50,11 +57,11 @@ public class ReSTClientTest {
 		
 		//API allows for code that specifically checks for errors, 
 		// or relies on exception handling.
-		// Explicitly check for errors.
+		// First we explicitly check for errors.
 		if (!resp.isError())
-			System.out.println(resp.getContent());		
+			pl(resp.getContent());		
 		
-		// Use an error handler.
+		// Or we can use an error handler instead.
 		restClient.setErrorHandler(new ReSTClient.ErrorHandler() {
 			
 			@Override
@@ -63,8 +70,19 @@ public class ReSTClientTest {
 			}
 		});
 		
+		//When building URLs it can be nice to have something
+		//take care of the concatination, path seperators, and scheme.  
+		//URLBuilder is a static helper that does this.
+		
 		//Use URLBuilder to build a url.
 		URLBuilder localhost = restClient.buildURL("localhost");
+		
+		//Prints http://localhost
+		pl(localhost);
+		
+		//Prints http://localhost/myservlet
+		pl(
+				localhost.append("//myservlet"));		
 		
 		// do a POST with the short-form method
 		Response<Integer> rc = 
@@ -72,10 +90,10 @@ public class ReSTClientTest {
 		
 		// Check the last response for an error.
 		if (rc.isError())
-			System.out.println("boo!");
+			pl("boo!");
 					
 		// Call GET and pass back the raw response InputStream to the client.
-		System.out.println(
+		pl(
 				restClient.callGet(localhost, ReSTClient.INPUTSTREAM_DESERIALIZER)
 					.getContent().available());
 		
@@ -83,32 +101,31 @@ public class ReSTClientTest {
 		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
 		
 		//This GET will deserialize server response as a string and 
-		//throw IOException on any error.
+		//throw IOException on any error.  
 		Response<String> rs = 
 			restClient.callGet(localhost, ReSTClient.STRING_DESERIALIZER);
 		
-		// Print the response.
-		System.out.println(rs.getContent());
+		pl(rs.getContent());
 		
 		// Subsequent calls to this rest client will not throw exceptions on HTTP errors.
 		restClient.setErrorHandler(null);
 					
-		//following line will never throw IOException 
+		//Since we do not have an error handler, this call will not throw IOException.
 		rs = restClient.callGet(localhost.copy("asdf"), ReSTClient.STRING_DESERIALIZER);
 		
 		if (rs.isError())
-			System.out.println("Error: " + rs.getCode());
+			pl("Error: " + rs.getCode());
 		
 		//Set the error handler to throw all errors.
 		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
 		
-		//following line will throw IOException 
+		//The following line will throw IOException.
 		try {
 			rs = restClient.callGet(localhost.copy("/asdf"), ReSTClient.STRING_DESERIALIZER);
 			//Error is thrown when trying to get content.
-			System.out.println(rs.getContent());
+			pl(rs.getContent());
 		} catch (IOException e) {
-			System.out.println("Error: " + e.getMessage());
+			pl("Error: " + e.getMessage());
 		}
 		
 		//following line will throw IOException 
@@ -116,7 +133,7 @@ public class ReSTClientTest {
 			//Error is thrown when trying to get content.
 			String respstr = restClient.callGet("localhost/asdf");				
 		} catch (IOException e) {
-			System.out.println("Error: " + e.getMessage());
+			pl("Error: " + e.getMessage());
 		}
 		
 		// Only throw errors relating to server problems.
@@ -127,9 +144,9 @@ public class ReSTClientTest {
 			rs = restClient.callGet("localhost/asdf", ReSTClient.STRING_DESERIALIZER);
 			//Error is not thrown when trying to get content because it is not a server error, but rather a 404.
 			
-			System.out.println("Should be true: " + rs.isError());
+			pl("Should be true: " + rs.isError());
 		} catch (IOException e) {
-			System.out.println("Error: " + e.getMessage());
+			pl("Error: " + e.getMessage());
 		}
 		
 		//following line will throw IOException 
@@ -138,7 +155,7 @@ public class ReSTClientTest {
 			//Error is thrown when trying to get content.
 			String respstr = restClient.callGetContent(localhost.copy("/asdf"), ReSTClient.STRING_DESERIALIZER);				
 		} catch (IOException e) {
-			System.out.println("Error: " + e.getMessage());
+			pl("Error: " + e.getMessage());
 		}
 		
 		//Multipart POST with a file upload.
@@ -155,33 +172,33 @@ public class ReSTClientTest {
 		
 		//HTTP DELETE
 		Response<Integer> drc = restClient.callDelete(localhost.copy("/deleteurl"));
-		System.out.println("should be true: " + drc.isError());
+		pl("should be true: " + drc.isError());
 		
 		//HTTP HEAD
 		Response<Integer> mrc = restClient.callHead(localhost);
 		
-		System.out.println("should be false: " + mrc.isError());					
+		pl("should be false: " + mrc.isError());					
 
 		
 		//This URLBuilder builds https://citibank.com/secureme/halp	
-		System.out.println(
+		pl(
 				restClient.buildURL("htTPS://citibank.com/secureme/").append("/halp"));
 		
 		// Builds http://yahoo.com/a/mystore/toodles?index=5
-		System.out.println(restClient.buildURL("yahoo.com")
+		pl(restClient.buildURL("yahoo.com")
 										.append("a")
 										.append("mystore/")
 										.append("toodles?index=5"));
 				
 		// Builds http://me.com/you/andi/like/each/ohter
-		System.out.println(
+		pl(
 				restClient.buildURL("me.com/")
 					.append("/you/")
 					.append("/andi/")
 					.append("like/each/ohter/"));
 		
 		// Builds https://myhost.com/first/second/third/forth/fith/mypage.asp?i=1&b=2&c=3
-		System.out.println(
+		pl(
 				restClient.buildURL(
 						"myhost.com", 
 						"first/", 
@@ -197,8 +214,12 @@ public class ReSTClientTest {
 			.setHttps(true);
 						
 		// Original URL: http://myhost.net/homepage
-		System.out.println(origurl);
+		pl(origurl);
 		// Child URL: https://myhost.net/homepage/asdf/adf/reqotwoetiywer
-		System.out.println(newurl);
+		pl(newurl);
+	}
+	
+	private static void pl(Object message) {
+		System.out.println(message);
 	}
 }
