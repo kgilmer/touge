@@ -5,7 +5,7 @@
  * support, and with no warranty, express or implied, as to its usefulness for
  *	any purpose.
  */
-package org.touge.restclient;
+package org.touge.restclient.test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -14,13 +14,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.touge.restclient.ReSTClient;
 import org.touge.restclient.ReSTClient.HttpMethod;
 import org.touge.restclient.ReSTClient.Response;
 import org.touge.restclient.ReSTClient.ResponseDeserializer;
 import org.touge.restclient.ReSTClient.URLBuilder;
 
 // ### Examples of how to use ReSTClient.
-public class ReSTClientTest {
+public class Usage {
 	
 	public static void main(String[] args) throws IOException {		
 		

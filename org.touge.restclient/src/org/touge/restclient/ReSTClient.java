@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import com.sun.net.httpserver.HttpHandler;
-
 /**
  * A client library for accessing resources via HTTP.
  * 
@@ -150,7 +148,7 @@ public class ReSTClient {
 		public String deserialize(InputStream input, int responseCode, Map<String, 
 				List<String>> headers) throws IOException {			
 			if (input != null)
-				return new String(streamToByteArray(input));
+				return new String(readStream(input));
 			
 			return null;
 		}
@@ -971,7 +969,7 @@ public class ReSTClient {
 				baos.write(';');
 				baos.write(LINE_ENDING.getBytes());
 				baos.write(LINE_ENDING.getBytes());
-				baos.write(streamToByteArray(new FileInputStream(ffile)));
+				baos.write(readStream(new FileInputStream(ffile)));
 			} else if (entry.getValue() instanceof FormInputStream) {
 				FormInputStream ffile = (FormInputStream) entry.getValue();
 				baos.write("; ".getBytes());
@@ -986,7 +984,7 @@ public class ReSTClient {
 				baos.write(';');
 				baos.write(LINE_ENDING.getBytes());
 				baos.write(LINE_ENDING.getBytes());
-				baos.write(streamToByteArray(ffile));
+				baos.write(readStream(ffile));
 			} else if (entry.getValue() == null) {
 				throw new IllegalArgumentException("Content value is null.");
 			} else {
@@ -1100,16 +1098,17 @@ public class ReSTClient {
 // Private methods
 	
 	/**
-	 * Create a byte array from the contents of an input stream.
+	 * Create an array of bytesfrom the complete contents of an InputStream.
 	 * 
 	 * @param in
 	 *            InputStream to turn into a byte array
-	 * @return byte array (byte[]) w/ contents of input stream
+	 * @return byte array (byte[]) w/ contents of input stream, or null if inputstream is null.
 	 * @throws IOException
 	 *             on I/O error
 	 */
-	private static byte[] streamToByteArray(InputStream in) throws IOException {
-		validateArguments(in);
+	public static byte[] readStream(InputStream in) throws IOException {
+		if (in == null)
+			return null;
 		
 		ByteArrayOutputStream os = new ByteArrayOutputStream();
 		int read = 0;
@@ -1242,7 +1241,7 @@ public class ReSTClient {
 		
 		@Override
 		public URLBuilder append(String ... sgmnts) {
-			validateArguments(sgmnts);
+			validateArguments((Object []) sgmnts);
 			
 			if (sgmnts.length == 1)
 				appendSingle(sgmnts[0]);
@@ -1331,7 +1330,7 @@ public class ReSTClient {
 
 		@Override
 		public URLBuilder copy(String ... segments) {	
-			validateArguments(segments);
+			validateArguments((Object []) segments);
 			
 			return this.copy().append(segments);
 		}

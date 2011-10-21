@@ -3,5 +3,5 @@ Bundle-ManifestVersion: 2
 Bundle-Name: HTTP ReST Client
 Bundle-SymbolicName: org.touge.restclient
 Bundle-Version: 1.0.0.qualifier
-Export-Package: org.touge.restclient; version="1.0"
+Export-Package: org.touge.restclient;version="1.0"
 Bundle-Vendor: Touge
