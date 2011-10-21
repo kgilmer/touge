@@ -1,54 +1,54 @@
 <?xml version="1.0"?>
 <project name="org.touge.restclient">
 	<property name="wget.bin" location="/usr/bin/wget" />
-		<property name="product.dir" location="${basedir}" />
-		<property name="dependencies.dir" location="${product.dir}/deps" />
-		<property name="build-common.url" value="http://shinyama.info/build-common.xml" />
-		
-		<target name="fetch.deps" description="download dependencies">
-			<exec executable="${wget.bin}">
-				<arg line="-P ${dependencies.dir}" />
-				<arg line="--no-check-certificate" />
-				<arg line="-nc" />
-				<arg line="http://www.osgi.org/download/r4v42/osgi.core.jar" />
-			</exec>
-			
-			<exec executable="${wget.bin}">
-				<arg line="-P ${dependencies.dir}" />
-				<arg line="--no-check-certificate" />
-				<arg line="-nc" />
-				<arg line="http://www.osgi.org/download/r4v42/osgi.cmpn.jar" />
-			</exec>
-			
-			<exec executable="${wget.bin}">
-				<arg line="-P ${dependencies.dir}" />
-				<arg line="--no-check-certificate" />
-				<arg line="-nc" />
-				<arg line="https://github.com/downloads/KentBeck/junit/junit-4.9.jar" />
-			</exec>
-		</target>
-
+	<property name="git.bin" location="/usr/bin/git" />
+	<property name="product.dir" location="${basedir}" />
+	<property name="dependencies.dir" location="${product.dir}/deps" />
+	<property name="build-common.url" value="git://github.com/kgilmer/ant-build-common.git" />
+	
+	<target name="fetch.deps" description="download dependencies">
 		<exec executable="${wget.bin}">
 			<arg line="-P ${dependencies.dir}" />
 			<arg line="--no-check-certificate" />
 			<arg line="-nc" />
-			<arg line="${build-common.url}" />
+			<arg line="http://www.osgi.org/download/r4v42/osgi.core.jar" />
 		</exec>
 	
-		<target name="jar" depends="compile" description="create a Jar file for the application">
-			<mkdir dir="${dist.dir}" />
-			<copy file="META-INF/MANIFEST.MF" todir="${class.dir}"/>
-			<mkdir dir="lib" />
-			<copy file="${dependencies.dir}/junit-4.9.jar" todir="lib" />
-			<manifest file="${class.dir}/MANIFEST.MF" mode="update">
-				<attribute name="Built-By" value="${user.name}" />
-				<attribute name="Built-Date" value="${TS_NOW}" />
-			</manifest>
-			<jar destfile="${dist.dir}/${ant.project.name}.jar" manifest="${class.dir}/MANIFEST.MF" >
-				<fileset dir="${class.dir}" includes="**/*.class" />
-				<fileset dir="${basedir}" includes="lib/junit-4.9.jar" />
-			</jar>
-		</target>
-	
-		<import file="${dependencies.dir}/build-common.xml"/>	
-	</project>
+		<exec executable="${wget.bin}">
+			<arg line="-P ${dependencies.dir}" />
+			<arg line="--no-check-certificate" />
+			<arg line="-nc" />
+			<arg line="http://www.osgi.org/download/r4v42/osgi.cmpn.jar" />
+		</exec>
+		
+		<exec executable="${wget.bin}">
+			<arg line="-P ${dependencies.dir}" />
+			<arg line="--no-check-certificate" />
+			<arg line="-nc" />
+			<arg line="https://github.com/downloads/KentBeck/junit/junit-4.9.jar" />
+		</exec>
+	</target>
+
+	<!-- get the common build file -->
+	<exec executable="${git.bin}">
+		<arg line="clone" />	
+		<arg line="${build-common.url}" />	
+	</exec>
+
+	<target name="jar" depends="compile" description="create a Jar file for the application">
+		<mkdir dir="${dist.dir}" />
+		<copy file="META-INF/MANIFEST.MF" todir="${class.dir}"/>
+		<mkdir dir="lib" />
+		<copy file="${dependencies.dir}/junit-4.9.jar" todir="lib" />
+		<manifest file="${class.dir}/MANIFEST.MF" mode="update">
+			<attribute name="Built-By" value="${user.name}" />
+			<attribute name="Built-Date" value="${TS_NOW}" />
+		</manifest>
+		<jar destfile="${dist.dir}/${ant.project.name}.jar" manifest="${class.dir}/MANIFEST.MF" >
+			<fileset dir="${class.dir}" includes="**/*.class" />
+			<fileset dir="${basedir}" includes="lib/junit-4.9.jar" />
+		</jar>
+	</target>
+
+	<import file="ant-build-common/build-common.xml"/>	
+</project>
