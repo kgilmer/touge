@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.sun.net.httpserver.HttpHandler;
+
 /**
  * A client library for accessing resources via HTTP.
  * 
@@ -254,17 +256,7 @@ public class ReSTClient {
 		 * @return The HTTP Response code from the server.
 		 * @throws IOException on I/O error.
 		 */
-		int getCode() throws IOException;
-		
-		/**
-		 * @return the amount of time in millis that occured while waiting for the server.
-		 */
-		long getCallTime();
-		
-		/**
-		 * @return the total amount of time the client experiences from the call() method.
-		 */
-		long getTotalTime();
+		int getCode() throws IOException;		
 		
 		/**
 		 * @return true if error code or an exception is raised, false otherwise.
@@ -367,6 +359,8 @@ public class ReSTClient {
 	private List<ConnectionInitializer> connectionInitializers;
 	
 	private ErrorHandler errorHandler;
+	private OutputStream debugStream;
+	private StringBuilder debugBuffer;
 		
 	/**
 	 * Default constructor.
@@ -374,7 +368,6 @@ public class ReSTClient {
 	public ReSTClient() {
 		this.connectionProvider = new DefaultConnectionProvider();
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
-		//this.responseDeserializers = null;
 		this.errorHandler = null;
 	}
 	
@@ -384,7 +377,6 @@ public class ReSTClient {
 	public ReSTClient(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
-		//this.responseDeserializers = null;
 		this.errorHandler = null;
 	}
 	
@@ -411,7 +403,6 @@ public class ReSTClient {
 	 */
 	public ReSTClient(ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
 		this(initializer);
-		//this.responseDeserializers = deserializer;
 	}
 	
 	/**
@@ -421,7 +412,6 @@ public class ReSTClient {
 	 */
 	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
 		this(connectionProvider, initializer);
-		//this.responseDeserializers = deserializer;
 	}
 	
 	/**
@@ -434,8 +424,23 @@ public class ReSTClient {
 			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
-		//this.responseDeserializers = deserializer;
 		this.errorHandler = errorHandler;
+		connectionInitializers.add(initializer);		
+	}
+	
+	/**
+	 * @param connectionProvider ConnectionProvider
+	 * @param initializer ConnectionInitializer
+	 * @param deserializer ResponseDeserializer<T>
+	 * @param errorHandler ErrorHandler
+	 * @param debugStream OutputStream to pass debug messages to.  If null, no debug output.
+	 */
+	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
+			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler, OutputStream debugStream) {
+		this.connectionProvider = connectionProvider;
+		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
+		this.errorHandler = errorHandler;
+		this.debugStream = debugStream;
 		connectionInitializers.add(initializer);		
 	}
 	
@@ -460,6 +465,16 @@ public class ReSTClient {
 	 */
 	public void setErrorHandler(ErrorHandler handler) {
 		this.errorHandler = handler;
+	}
+	
+	/**
+	 * Sets a debug OutputStream for the client.  If null is passed, no debug output
+	 * will be generated.
+	 * 
+	 * @param debugStream OutputStream
+	 */
+	public void setDebugStream(OutputStream debugStream) {
+		this.debugStream = debugStream;
 	}
 	
 	/**
@@ -513,16 +528,20 @@ public class ReSTClient {
 	public <T> Response<T> call(final HttpMethod method, final String url, final ResponseDeserializer<T> deserializer, 
 			InputStream content, Map<String, String> headers) throws IOException {
 		
-		validateArguments(method, url);
-		
-		long timeStart = System.currentTimeMillis();
+		validateArguments(method, url);		
 		
 		String httpUrl = url;
 		if (!url.toLowerCase().startsWith("http://"))
 			httpUrl = "http://" + url;
+		
+		if (debugStream != null)
+			debugStart(httpUrl);
 				
 		final HttpURLConnection connection = connectionProvider.getConnection(httpUrl);
 		connection.setRequestMethod(method.toString());
+		
+		if (debugStream != null)
+			debugMid(method.toString());
 		
 		for (ConnectionInitializer initializer : connectionInitializers)
 			initializer.initialize(connection);
@@ -543,6 +562,9 @@ public class ReSTClient {
 			copy(content, baos);					
 			writeRequestBody(connection, baos.toByteArray());	
 			baos.close();
+			
+			if (debugStream != null)
+				debugMid(new String(baos.toByteArray()));
 			break;
 		case PUT:
 			connection.setDoOutput(true);
@@ -550,6 +572,9 @@ public class ReSTClient {
 			copy(content, baos);
 			writeRequestBody(connection, baos.toByteArray());
 			baos.close();
+			
+			if (debugStream != null)
+				debugMid(new String(baos.toByteArray()));
 			break;
 		case DELETE:
 			connection.setDoInput(true);
@@ -562,10 +587,12 @@ public class ReSTClient {
 			throw new RuntimeException("Unhandled HTTP method.");
 		}	
 		
+		if (debugStream != null)
+			debugEnd();
+		
 		return new Response<T>() {
 
 			private boolean done;
-			private long callEnd;
 			private boolean cancelled;
 
 			@Override
@@ -600,18 +627,6 @@ public class ReSTClient {
 			}
 
 			@Override
-			public long getCallTime() {			
-				//return callEnd - callStart;
-				return 0;
-			}
-
-			@Override
-			public long getTotalTime() {		
-				//return callEnd - timeStart;
-				return 0;
-			}
-
-			@Override
 			public boolean cancel(boolean flag) {
 				connection.disconnect();
 				cancelled = true;
@@ -642,8 +657,8 @@ public class ReSTClient {
 				}
 				
 				if (deserializer == null) {
+					// If no deserializer is specified, use String.
 					T response = (T) ReSTClient.STRING_DESERIALIZER.deserialize(connection.getInputStream(), 0, null);
-					callEnd = System.currentTimeMillis();
 					done = true;
 					return (T) response;
 				}
@@ -651,7 +666,6 @@ public class ReSTClient {
 				T response = (T) deserializer.deserialize(connection.getInputStream(), 
 						connection.getResponseCode(), connection.getHeaderFields());
 				
-				callEnd = System.currentTimeMillis();
 				done = true;
 				return response;				
 			}
@@ -659,6 +673,30 @@ public class ReSTClient {
 		};				
 	}
 	
+	private void debugStart(String httpUrl) {
+		debugBuffer = new StringBuilder();
+		debugBuffer.append(this.getClass().getSimpleName());
+		debugBuffer.append(' ');
+		debugBuffer.append(System.currentTimeMillis());
+		debugBuffer.append(' ');
+		debugBuffer.append(httpUrl);
+		debugBuffer.append(' ');
+	}
+	
+	private void debugMid(String element) {		
+		debugBuffer.append(element);
+		debugBuffer.append(' ');
+	}
+	
+	private void debugEnd() {		
+		debugBuffer.append('\n');
+		try {
+			debugStream.write(debugBuffer.toString().getBytes());
+			debugStream.flush();
+		} catch (IOException e) {			
+		}
+	}
+
 	/**
 	 * Execute GET method and return body as a string.  This call blocks
 	 * until the response content is deserialized into a String.
