@@ -5,6 +5,7 @@
 	<property name="product.dir" location="${basedir}" />
 	<property name="dependencies.dir" location="${product.dir}/deps" />
 	<property name="build-common.url" value="git://github.com/kgilmer/ant-build-common.git" />
+	<property name="javadoc.packages" value="org.touge.restclient" />
 	
 	<target name="fetch.deps" description="download dependencies">
 		<exec executable="${wget.bin}">
