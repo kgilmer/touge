@@ -1,77 +1,600 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'>
-
-  <title>kgilmer/touge @ GitHub</title>
-
-  <style type="text/css">
-    body {
-      margin-top: 1.0em;
-      background-color: #067475;
-      font-family: Helvetica, Arial, FreeSans, san-serif;
-      color: #ffffff;
-    }
-    #container {
-      margin: 0 auto;
-      width: 700px;
-    }
-    h1 { font-size: 3.8em; color: #f98b8a; margin-bottom: 3px; }
-    h1 .small { font-size: 0.4em; }
-    h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #f98b8a; }
-    h3 { text-align: center; color: #f98b8a; }
-    a { color: #f98b8a; }
-    .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
-    .download { float: right; }
-    pre { background: #000; color: #fff; padding: 15px;}
-    hr { border: 0; width: 80%; border-bottom: 1px solid #aaa}
-    .footer { text-align:center; padding-top:30px; font-style: italic; }
-  </style>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <title>ReSTClientTest.java</title>
+  <link rel="stylesheet" href="pycco.css">
 </head>
-
 <body>
-  <a href="http://github.com/kgilmer/touge"><img style="position: absolute; top: 0; right: 0; border: 0;" src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
-
-  <div id="container">
-
-    <div class="download">
-      <a href="http://github.com/kgilmer/touge/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/kgilmer/touge/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
-
-    <h1><a href="http://github.com/kgilmer/touge">touge</a>
-      <span class="small">by <a href="http://github.com/kgilmer">kgilmer</a></span></h1>
-
-    <div class="description">
-      Small utilities under public domain.
-    </div>
-
-    <h2>Authors</h2>
-<p>Ken Gilmer (kgilmer@gmail.com)<br/>      </p>
-<h2>Contact</h2>
-<p>Ken Gilmer (kgilmer@gmail.com)<br/>      </p>
-
-
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/kgilmer/touge/zipball/master">zip</a> or
-      <a href="http://github.com/kgilmer/touge/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/kgilmer/touge</pre>
-    </p>
-
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/kgilmer/touge">kgilmer/touge</a>
-    </div>
-
-  </div>
-
+<div id="background"></div>
+<div id='container'>
   
+  <div class='section'>
+    <div class='docs'><h1>ReSTClientTest.java</h1></div>
+  </div>
+  <div class='clearall'>
+  <div class='section' id='section-0'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-0'>#</a>
+      </div>
+      <h3><strong>ReSTClient</strong> wraps java.net.HttpURLConnection and provides facilities for deserialization, explicit and implicit error handling, and request header initialization.</h3>
+<p>ReSTClient sources are <a href="https://github.com/kgilmer/touge">on GitHub</a>.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="cm">/*</span>
+<span class="cm"> * This file is in the public domain, furnished &quot;as is&quot;, without technical</span>
+<span class="cm"> * support, and with no warranty, express or implied, as to its usefulness for</span>
+<span class="cm"> *	any purpose.</span>
+<span class="cm"> */</span>
+<span class="n">package</span> <span class="n">org</span><span class="p">.</span><span class="n">touge</span><span class="p">.</span><span class="n">restclient</span><span class="p">;</span>
+
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">ByteArrayInputStream</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">IOException</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">io</span><span class="p">.</span><span class="n">InputStream</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">HashMap</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">List</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">java</span><span class="p">.</span><span class="n">util</span><span class="p">.</span><span class="n">Map</span><span class="p">;</span>
+
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">touge</span><span class="p">.</span><span class="n">restclient</span><span class="p">.</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">HttpMethod</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">touge</span><span class="p">.</span><span class="n">restclient</span><span class="p">.</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">Response</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">touge</span><span class="p">.</span><span class="n">restclient</span><span class="p">.</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">ResponseDeserializer</span><span class="p">;</span>
+<span class="n">import</span> <span class="n">org</span><span class="p">.</span><span class="n">touge</span><span class="p">.</span><span class="n">restclient</span><span class="p">.</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">URLBuilder</span><span class="p">;</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-1'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-1'>#</a>
+      </div>
+      <h3>Examples of how to use ReSTClient.</h3>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre><span class="n">public</span> <span class="n">class</span> <span class="n">ReSTClientTest</span> <span class="p">{</span>
+	
+	<span class="n">public</span> <span class="k">static</span> <span class="kt">void</span> <span class="n">main</span><span class="p">(</span><span class="n">String</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span> <span class="n">throws</span> <span class="n">IOException</span> <span class="p">{</span>		
+		
+		<span class="n">ReSTClient</span> <span class="n">restClient</span> <span class="o">=</span> <span class="n">new</span> <span class="n">ReSTClient</span><span class="p">();</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-2'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-2'>#</a>
+      </div>
+      <p>The most common simple thing to do is GET and return the body
+as a String.  ReSTClient:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">String</span> <span class="n">responseBody</span> <span class="o">=</span> 
+			<span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-3'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-3'>#</a>
+      </div>
+      <p>Another common thing is to POST a String to a server:</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">callPost</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="s">&quot;my content&quot;</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-4'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-4'>#</a>
+      </div>
+      <p>Getting more complex, we can specify a deserializer that will turn
+the server response into an Object our client wants.  Here we use
+one of the few predefined deserializers.
+Call GET on localhost using long form, pass in a predefined deserializer, no body (since GET), and no custom headers.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">resp</span> <span class="o">=</span> 
+			<span class="n">restClient</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">GET</span><span class="p">,</span> <span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">,</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">);</span>
+		<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Response: &quot;</span> <span class="o">+</span> <span class="n">resp</span><span class="p">.</span><span class="n">getContent</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-5'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-5'>#</a>
+      </div>
+      <p>Call get and provide a custom deserializer into a custom type.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span> <span class="n">cresp</span> <span class="o">=</span> 
+			<span class="n">restClient</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="n">HttpMethod</span><span class="p">.</span><span class="n">GET</span><span class="p">,</span> <span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">new</span> <span class="n">ResponseDeserializer</span><span class="o">&lt;</span><span class="n">Double</span><span class="o">&gt;</span><span class="p">()</span> <span class="p">{</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-6'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-6'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>				<span class="err">@</span><span class="n">Override</span>
+				<span class="n">public</span> <span class="n">Double</span> <span class="n">deserialize</span><span class="p">(</span><span class="n">InputStream</span> <span class="n">input</span><span class="p">,</span> <span class="kt">int</span> <span class="n">responseCode</span><span class="p">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;&gt;</span> <span class="n">headers</span><span class="p">)</span> <span class="n">throws</span> <span class="n">IOException</span> <span class="p">{</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-7'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-7'>#</a>
+      </div>
+      <p>Here one would check the server response and read the input stream.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>					<span class="n">String</span> <span class="p">[]</span> <span class="n">s</span> <span class="o">=</span> <span class="s">&quot;321 asdf&quot;</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">);</span>  
+					<span class="k">return</span> <span class="n">Double</span><span class="p">.</span><span class="n">parseDouble</span><span class="p">(</span><span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+				<span class="p">}</span>
+				
+			<span class="p">},</span> <span class="n">null</span><span class="p">,</span> <span class="n">null</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-8'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-8'>#</a>
+      </div>
+      <p>API allows for code that specifically checks for errors, 
+or relies on exception handling.
+First we explicitly check for errors.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">resp</span><span class="p">.</span><span class="n">isError</span><span class="p">())</span>
+			<span class="n">pl</span><span class="p">(</span><span class="n">resp</span><span class="p">.</span><span class="n">getContent</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-9'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-9'>#</a>
+      </div>
+      <p>Or we can use an error handler instead.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">new</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">ErrorHandler</span><span class="p">()</span> <span class="p">{</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-10'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-10'>#</a>
+      </div>
+      
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>			<span class="err">@</span><span class="n">Override</span>
+			<span class="n">public</span> <span class="kt">void</span> <span class="n">handleError</span><span class="p">(</span><span class="kt">int</span> <span class="n">code</span><span class="p">)</span> <span class="n">throws</span> <span class="n">IOException</span> <span class="p">{</span>
+				<span class="n">System</span><span class="p">.</span><span class="n">err</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="s">&quot;HTTP Error &quot;</span> <span class="o">+</span> <span class="n">code</span> <span class="o">+</span> <span class="s">&quot; occurred.&quot;</span><span class="p">);</span>
+			<span class="p">}</span>
+		<span class="p">});</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-11'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-11'>#</a>
+      </div>
+      <p>Use URLBuilder to build a url.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">URLBuilder</span> <span class="n">localhost</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-12'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-12'>#</a>
+      </div>
+      <p>Prints http://localhost</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span><span class="n">localhost</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-13'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-13'>#</a>
+      </div>
+      <p>Prints http://localhost/myservlet</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span>
+				<span class="n">localhost</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;//myservlet&quot;</span><span class="p">));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-14'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-14'>#</a>
+      </div>
+      <p>do a POST with the short-form method</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">rc</span> <span class="o">=</span> 
+			<span class="n">restClient</span><span class="p">.</span><span class="n">callPost</span><span class="p">(</span><span class="n">localhost</span><span class="p">,</span> <span class="s">&quot;My POST content&quot;</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-15'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-15'>#</a>
+      </div>
+      <p>Check the last response for an error.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="k">if</span> <span class="p">(</span><span class="n">rc</span><span class="p">.</span><span class="n">isError</span><span class="p">())</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;boo!&quot;</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-16'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-16'>#</a>
+      </div>
+      <p>Call GET and pass back the raw response InputStream to the client.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span>
+				<span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="n">localhost</span><span class="p">,</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">INPUTSTREAM_DESERIALIZER</span><span class="p">)</span>
+					<span class="p">.</span><span class="n">getContent</span><span class="p">().</span><span class="n">available</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-17'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-17'>#</a>
+      </div>
+      <p>Create a rest client that will throw exceptions on all HTTP and I/O errors.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">THROW_ALL_ERRORS</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-18'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-18'>#</a>
+      </div>
+      <p>This GET will deserialize server response as a string and 
+throw IOException on any error.<br />
+</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="n">rs</span> <span class="o">=</span> 
+			<span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="n">localhost</span><span class="p">,</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">);</span>
+		
+		<span class="n">pl</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="n">getContent</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-19'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-19'>#</a>
+      </div>
+      <p>Subsequent calls to this rest client will not throw exceptions on HTTP errors.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">null</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-20'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-20'>#</a>
+      </div>
+      <p>Since we do not have an error handler, this call will not throw IOException.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">rs</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="n">localhost</span><span class="p">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;asdf&quot;</span><span class="p">),</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">);</span>
+		
+		<span class="k">if</span> <span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="n">isError</span><span class="p">())</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">rs</span><span class="p">.</span><span class="n">getCode</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-21'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-21'>#</a>
+      </div>
+      <p>Set the error handler to throw all errors.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">THROW_ALL_ERRORS</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-22'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-22'>#</a>
+      </div>
+      <p>The following line will throw IOException.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">try</span> <span class="p">{</span>
+			<span class="n">rs</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="n">localhost</span><span class="p">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;/asdf&quot;</span><span class="p">),</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-23'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-23'>#</a>
+      </div>
+      <p>Error is thrown when trying to get content.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>			<span class="n">pl</span><span class="p">(</span><span class="n">rs</span><span class="p">.</span><span class="n">getContent</span><span class="p">());</span>
+		<span class="p">}</span> <span class="n">catch</span> <span class="p">(</span><span class="n">IOException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">getMessage</span><span class="p">());</span>
+		<span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-24'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-24'>#</a>
+      </div>
+      <p>following line will throw IOException </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">try</span> <span class="p">{</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-25'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-25'>#</a>
+      </div>
+      <p>Error is thrown when trying to get content.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>			<span class="n">String</span> <span class="n">respstr</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="s">&quot;localhost/asdf&quot;</span><span class="p">);</span>				
+		<span class="p">}</span> <span class="n">catch</span> <span class="p">(</span><span class="n">IOException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">getMessage</span><span class="p">());</span>
+		<span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-26'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-26'>#</a>
+      </div>
+      <p>Only throw errors relating to server problems.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">THROW_5XX_ERRORS</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-27'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-27'>#</a>
+      </div>
+      <p>following line will throw IOException </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">try</span> <span class="p">{</span>
+			<span class="n">rs</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callGet</span><span class="p">(</span><span class="s">&quot;localhost/asdf&quot;</span><span class="p">,</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-28'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-28'>#</a>
+      </div>
+      <p>Error is not thrown when trying to get content because it is not a server error, but rather a 404.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>			
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Should be true: &quot;</span> <span class="o">+</span> <span class="n">rs</span><span class="p">.</span><span class="n">isError</span><span class="p">());</span>
+		<span class="p">}</span> <span class="n">catch</span> <span class="p">(</span><span class="n">IOException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">getMessage</span><span class="p">());</span>
+		<span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-29'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-29'>#</a>
+      </div>
+      <p>following line will throw IOException </p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">THROW_ALL_ERRORS</span><span class="p">);</span>
+		<span class="n">try</span> <span class="p">{</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-30'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-30'>#</a>
+      </div>
+      <p>Error is thrown when trying to get content.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>			<span class="n">String</span> <span class="n">respstr</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callGetContent</span><span class="p">(</span><span class="n">localhost</span><span class="p">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;/asdf&quot;</span><span class="p">),</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">STRING_DESERIALIZER</span><span class="p">);</span>				
+		<span class="p">}</span> <span class="n">catch</span> <span class="p">(</span><span class="n">IOException</span> <span class="n">e</span><span class="p">)</span> <span class="p">{</span>
+			<span class="n">pl</span><span class="p">(</span><span class="s">&quot;Error: &quot;</span> <span class="o">+</span> <span class="n">e</span><span class="p">.</span><span class="n">getMessage</span><span class="p">());</span>
+		<span class="p">}</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-31'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-31'>#</a>
+      </div>
+      <p>Multipart POST with a file upload.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span> <span class="n">body</span> <span class="o">=</span> <span class="n">new</span> <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span> <span class="n">Object</span><span class="o">&gt;</span><span class="p">();</span>
+		
+		<span class="n">body</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="s">&quot;tkey&quot;</span><span class="p">,</span> <span class="s">&quot;tval&quot;</span><span class="p">);</span>
+		<span class="n">body</span><span class="p">.</span><span class="n">put</span><span class="p">(</span><span class="s">&quot;myfile&quot;</span><span class="p">,</span> <span class="n">new</span> <span class="n">ReSTClient</span><span class="p">.</span><span class="n">FormFile</span><span class="p">(</span><span class="s">&quot;/tmp/boo.txt&quot;</span><span class="p">,</span> <span class="s">&quot;text/plain&quot;</span><span class="p">));</span>
+		
+		<span class="n">restClient</span><span class="p">.</span><span class="n">callPostMultipart</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-32'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-32'>#</a>
+      </div>
+      <p>PUT, short form, throw exception on error</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">restClient</span><span class="p">.</span><span class="n">setErrorHandler</span><span class="p">(</span><span class="n">ReSTClient</span><span class="p">.</span><span class="n">THROW_ALL_ERRORS</span><span class="p">);</span>
+		<span class="n">Response</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">mr</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callPut</span><span class="p">(</span><span class="s">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">new</span> <span class="n">ByteArrayInputStream</span><span class="p">(</span><span class="s">&quot;boo&quot;</span><span class="p">.</span><span class="n">getBytes</span><span class="p">()));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-33'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-33'>#</a>
+      </div>
+      <p>HTTP DELETE</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">drc</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callDelete</span><span class="p">(</span><span class="n">localhost</span><span class="p">.</span><span class="n">copy</span><span class="p">(</span><span class="s">&quot;/deleteurl&quot;</span><span class="p">));</span>
+		<span class="n">pl</span><span class="p">(</span><span class="s">&quot;should be true: &quot;</span> <span class="o">+</span> <span class="n">drc</span><span class="p">.</span><span class="n">isError</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-34'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-34'>#</a>
+      </div>
+      <p>HTTP HEAD</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">Response</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">&gt;</span> <span class="n">mrc</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">callHead</span><span class="p">(</span><span class="n">localhost</span><span class="p">);</span>
+		
+		<span class="n">pl</span><span class="p">(</span><span class="s">&quot;should be false: &quot;</span> <span class="o">+</span> <span class="n">mrc</span><span class="p">.</span><span class="n">isError</span><span class="p">());</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-35'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-35'>#</a>
+      </div>
+      <p>When programmatically building URLs it can be nice to have something
+take care of the concatenation, path separators, and scheme.<br />
+URLBuilder is a static helper that does this.</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-36'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-36'>#</a>
+      </div>
+      <p>This URLBuilder builds https://citibank.com/secureme/halp <br />
+</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span>
+				<span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span><span class="s">&quot;htTPS://citibank.com/secureme/&quot;</span><span class="p">).</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;/halp&quot;</span><span class="p">));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-37'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-37'>#</a>
+      </div>
+      <p>Builds http://yahoo.com/a/mystore/toodles?index=5</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span><span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span><span class="s">&quot;yahoo.com&quot;</span><span class="p">)</span>
+										<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;a&quot;</span><span class="p">)</span>
+										<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;mystore/&quot;</span><span class="p">)</span>
+										<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;toodles?index=5&quot;</span><span class="p">));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-38'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-38'>#</a>
+      </div>
+      <p>Builds http://me.com/you/andi/like/each/ohter</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span>
+				<span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span><span class="s">&quot;me.com/&quot;</span><span class="p">)</span>
+					<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;/you/&quot;</span><span class="p">)</span>
+					<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;/andi/&quot;</span><span class="p">)</span>
+					<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;like/each/ohter/&quot;</span><span class="p">));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-39'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-39'>#</a>
+      </div>
+      <p>Builds https://myhost.com/first/second/third/forth/fith/mypage.asp?i=1&amp;b=2&amp;c=3</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span>
+				<span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span>
+						<span class="s">&quot;myhost.com&quot;</span><span class="p">,</span> 
+						<span class="s">&quot;first/&quot;</span><span class="p">,</span> 
+						<span class="s">&quot;//second&quot;</span><span class="p">,</span> 
+						<span class="s">&quot;third/forth/fith&quot;</span><span class="p">,</span> 
+						<span class="s">&quot;mypage.asp?i=1&amp;b=2&amp;c=3&quot;</span><span class="p">).</span><span class="n">setHttps</span><span class="p">(</span><span class="nb">true</span><span class="p">));</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-40'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-40'>#</a>
+      </div>
+      <p>Create child URLs from base URLs</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">URLBuilder</span> <span class="n">origurl</span> <span class="o">=</span> <span class="n">restClient</span><span class="p">.</span><span class="n">buildURL</span><span class="p">(</span><span class="s">&quot;myhost.net/&quot;</span><span class="p">,</span><span class="s">&quot;/homepage&quot;</span><span class="p">);</span>
+		<span class="n">URLBuilder</span> <span class="n">newurl</span> <span class="o">=</span> <span class="n">origurl</span>
+			<span class="p">.</span><span class="n">copy</span><span class="p">()</span>
+			<span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="s">&quot;asdf/adf/reqotwoetiywer&quot;</span><span class="p">)</span>
+			<span class="p">.</span><span class="n">setHttps</span><span class="p">(</span><span class="nb">true</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-41'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-41'>#</a>
+      </div>
+      <p>Original URL: http://myhost.net/homepage</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span><span class="n">origurl</span><span class="p">);</span></pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div><div class='section' id='section-42'>
+    <div class='docs'>
+      <div class='octowrap'>
+        <a class='octothorpe' href='#section-42'>#</a>
+      </div>
+      <p>Child URL: https://myhost.net/homepage/asdf/adf/reqotwoetiywer</p>
+    </div>
+    <div class='code'>
+      <div class="highlight"><pre>		<span class="n">pl</span><span class="p">(</span><span class="n">newurl</span><span class="p">);</span>
+	<span class="p">}</span>
+	
+	<span class="n">private</span> <span class="k">static</span> <span class="kt">void</span> <span class="n">pl</span><span class="p">(</span><span class="n">Object</span> <span class="n">message</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">System</span><span class="p">.</span><span class="n">out</span><span class="p">.</span><span class="n">println</span><span class="p">(</span><span class="n">message</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+
+</pre></div>
+    </div>
+  </div>
+  <div class='clearall'></div>
+</div>
 </body>
-</html>
