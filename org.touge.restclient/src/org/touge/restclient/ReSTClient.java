@@ -648,7 +648,7 @@ public class ReSTClient {
 						errorHandler.handleError(getCode());
 						
 					if (deserializer != null)
-						return (T) deserializer.deserialize(null, connection.getResponseCode(), 
+						return (T) deserializer.deserialize(connection.getErrorStream(), connection.getResponseCode(), 
 								connection.getHeaderFields());
 					
 					return null;
