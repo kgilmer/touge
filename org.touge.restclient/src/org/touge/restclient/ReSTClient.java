@@ -12,11 +12,14 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -206,6 +209,10 @@ public class ReSTClient {
 		}
 		
 	};
+	/**
+	 * Time format for debug messages.
+	 */
+	private static final String DEBUG_TIME_FORMAT = "H:mm:ss:SSS";
 	
 	/**
 	 * The response from the server for a given request.
@@ -357,8 +364,9 @@ public class ReSTClient {
 	private List<ConnectionInitializer> connectionInitializers;
 	
 	private ErrorHandler errorHandler;
-	private OutputStream debugStream;
-	private StringBuilder debugBuffer;
+	private PrintWriter debugStream;
+	//private StringBuilder debugBuffer;
+	private SimpleDateFormat debugTimeFormat;
 		
 	/**
 	 * Default constructor.
@@ -434,7 +442,7 @@ public class ReSTClient {
 	 * @param debugStream OutputStream to pass debug messages to.  If null, no debug output.
 	 */
 	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
-			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler, OutputStream debugStream) {
+			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler, PrintWriter debugStream) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = errorHandler;
@@ -471,8 +479,12 @@ public class ReSTClient {
 	 * 
 	 * @param debugStream OutputStream
 	 */
-	public void setDebugStream(OutputStream debugStream) {
-		this.debugStream = debugStream;
+	public void setDebugWriter(PrintWriter writer) {
+		this.debugStream = writer;
+		
+		if (writer != null && debugTimeFormat == null) {
+			debugTimeFormat = new SimpleDateFormat(DEBUG_TIME_FORMAT);
+		}
 	}
 	
 	/**
@@ -532,15 +544,13 @@ public class ReSTClient {
 		if (!url.toLowerCase().startsWith("http://"))
 			httpUrl = "http://" + url;
 		
+		StringBuilder debugBuffer = null;
 		if (debugStream != null)
-			debugStart(httpUrl);
+			debugBuffer = debugStart(httpUrl, method.toString());
 				
 		final HttpURLConnection connection = connectionProvider.getConnection(httpUrl);
 		connection.setRequestMethod(method.toString());
-		
-		if (debugStream != null)
-			debugMid(method.toString());
-		
+				
 		for (ConnectionInitializer initializer : connectionInitializers)
 			initializer.initialize(connection);
 		
@@ -562,7 +572,7 @@ public class ReSTClient {
 			baos.close();
 			
 			if (debugStream != null)
-				debugMid(new String(baos.toByteArray()));
+				debugMid(debugBuffer, new String(baos.toByteArray()));
 			break;
 		case PUT:
 			connection.setDoOutput(true);
@@ -572,7 +582,7 @@ public class ReSTClient {
 			baos.close();
 			
 			if (debugStream != null)
-				debugMid(new String(baos.toByteArray()));
+				debugMid(debugBuffer, new String(baos.toByteArray()));
 			break;
 		case DELETE:
 			connection.setDoInput(true);
@@ -585,17 +595,24 @@ public class ReSTClient {
 			throw new RuntimeException("Unhandled HTTP method.");
 		}	
 		
-		if (debugStream != null)
-			debugEnd();
+		if (debugStream != null) 
+			debugEnd(debugBuffer);
 		
 		return new Response<T>() {
 
 			private boolean done;
 			private boolean cancelled;
+			private StringBuilder responseBuffer;
 
 			@Override
-			public int getCode() throws IOException {			
-				return connection.getResponseCode();
+			public int getCode() throws IOException {	
+				int code = connection.getResponseCode();
+				
+				if (debugStream != null) {
+					responseBuffer = debugStart(code, connection.getResponseMessage());
+				}
+					
+				return code;
 			}
 			
 			@Override
@@ -615,19 +632,24 @@ public class ReSTClient {
 
 			@Override
 			public boolean isError() {
-				int code;
 				try {
-					code = getCode();
+					int code = getCode();
 					return code >= HttpURLConnection.HTTP_BAD_REQUEST && code < HttpURLConnection.HTTP_VERSION;
 				} catch (IOException e) {
 					return true;
-				}			
+				}		
 			}
 
 			@Override
 			public boolean cancel(boolean flag) {
 				connection.disconnect();
 				cancelled = true;
+				
+				if (responseBuffer != null) {
+					debugMid(responseBuffer, "[CANCELLED]");
+					debugEnd(responseBuffer);
+				}
+				
 				return cancelled;
 			}
 
@@ -644,6 +666,10 @@ public class ReSTClient {
 			@Override
 			public T getContent() throws IOException {									
 				if (isError()) {
+					if (responseBuffer != null) {			
+						debugEnd(responseBuffer);
+					}
+					
 					if (errorHandler != null) 
 						errorHandler.handleError(getCode());
 						
@@ -658,6 +684,12 @@ public class ReSTClient {
 					// If no deserializer is specified, use String.
 					T response = (T) ReSTClient.STRING_DESERIALIZER.deserialize(connection.getInputStream(), 0, null);
 					done = true;
+					
+					if (responseBuffer != null) {
+						debugMid(responseBuffer, ((T)response).toString());
+						debugEnd(responseBuffer);
+					}
+					
 					return (T) response;
 				}
 				
@@ -665,34 +697,50 @@ public class ReSTClient {
 						connection.getResponseCode(), connection.getHeaderFields());
 				
 				done = true;
+				
+				if (responseBuffer != null) {				
+					debugEnd(responseBuffer);
+				}
+				
 				return response;				
 			}
 			
 		};				
 	}
 	
-	private void debugStart(String httpUrl) {
-		debugBuffer = new StringBuilder();
-		debugBuffer.append(this.getClass().getSimpleName());
+	private StringBuilder debugStart(String httpUrl, String httpMethod) {
+		StringBuilder debugBuffer = new StringBuilder();
+		debugBuffer.append(debugTimeFormat.format(new Date(System.currentTimeMillis())));
 		debugBuffer.append(' ');
-		debugBuffer.append(System.currentTimeMillis());
+		debugBuffer.append(httpMethod.subSequence(0, 3));
 		debugBuffer.append(' ');
 		debugBuffer.append(httpUrl);
 		debugBuffer.append(' ');
+		
+		return debugBuffer;
 	}
 	
-	private void debugMid(String element) {		
+	private StringBuilder debugStart(int responseCode, String responseMessage) {
+		StringBuilder debugBuffer = new StringBuilder();
+		debugBuffer.append(debugTimeFormat.format(new Date(System.currentTimeMillis())));
+		debugBuffer.append(' ');
+		debugBuffer.append("HTTP Response ");
+		debugBuffer.append(responseCode);
+		debugBuffer.append(": ");
+		debugBuffer.append(responseMessage);
+		debugBuffer.append(' ');
+		
+		return debugBuffer;
+	}
+	
+	private void debugMid(StringBuilder debugBuffer, String element) {		
 		debugBuffer.append(element);
 		debugBuffer.append(' ');
 	}
 	
-	private void debugEnd() {		
-		debugBuffer.append('\n');
-		try {
-			debugStream.write(debugBuffer.toString().getBytes());
-			debugStream.flush();
-		} catch (IOException e) {			
-		}
+	private void debugEnd(StringBuilder debugBuffer) {		
+		debugStream.println(debugBuffer.toString());	
+		debugStream.flush();
 	}
 
 	/**
