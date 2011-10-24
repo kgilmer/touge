@@ -10,6 +10,8 @@ package org.touge.restclient.test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +23,7 @@ import org.touge.restclient.ReSTClient.ResponseDeserializer;
 import org.touge.restclient.ReSTClient.URLBuilder;
 
 // ### Examples of how to use ReSTClient.
-public class Usage {
+public class ReSTClient_usage {
 	
 	public static void main(String[] args) throws IOException {		
 		
@@ -34,6 +36,9 @@ public class Usage {
 		
 		//Another common thing is to POST a String to a server:
 		restClient.callPost("localhost", "my content");
+		
+		//Print debug info to System.out
+		restClient.setDebugWriter(new PrintWriter(System.out));
 		
 		//Getting more complex, we can specify a deserializer that will turn
 		//the server response into an Object our client wants.  Here we use
@@ -56,6 +61,8 @@ public class Usage {
 				
 			}, null, null);
 		
+		//Disable debug output
+		restClient.setDebugWriter(null);
 		
 		//API allows for code that specifically checks for errors, 
 		// or relies on exception handling.
