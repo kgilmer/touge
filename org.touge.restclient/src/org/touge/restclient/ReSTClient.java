@@ -608,7 +608,7 @@ public class ReSTClient {
 			public int getCode() throws IOException {	
 				int code = connection.getResponseCode();
 				
-				if (debugStream != null) {
+				if (debugStream != null) {					
 					responseBuffer = debugStart(code, connection.getResponseMessage());
 				}
 					
@@ -666,7 +666,11 @@ public class ReSTClient {
 			@Override
 			public T getContent() throws IOException {									
 				if (isError()) {
-					if (responseBuffer != null) {			
+					if (responseBuffer != null) {
+						byte[] errorMessage = readStream(connection.getErrorStream());
+						if (errorMessage != null && errorMessage.length > 0)
+							debugMid(responseBuffer, new String(errorMessage, "UTF-8"));
+						
 						debugEnd(responseBuffer);
 					}
 					
@@ -724,10 +728,11 @@ public class ReSTClient {
 		StringBuilder debugBuffer = new StringBuilder();
 		debugBuffer.append(debugTimeFormat.format(new Date(System.currentTimeMillis())));
 		debugBuffer.append(' ');
-		debugBuffer.append("HTTP Response ");
+		debugBuffer.append("<-- ");
 		debugBuffer.append(responseCode);
-		debugBuffer.append(": ");
+		debugBuffer.append(" ");
 		debugBuffer.append(responseMessage);
+		
 		debugBuffer.append(' ');
 		
 		return debugBuffer;
