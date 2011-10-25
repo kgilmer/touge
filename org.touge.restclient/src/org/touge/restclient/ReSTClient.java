@@ -502,9 +502,11 @@ public class ReSTClient {
 	/**
 	 * @param initializer
 	 */
-	public void addConnectionInitializer(ConnectionInitializer initializer) {
+	public ConnectionInitializer addConnectionInitializer(ConnectionInitializer initializer) {
 		if (!connectionInitializers.contains(initializer))
 			connectionInitializers.add(initializer);
+		
+		return initializer;
 	}
 	
 	/**
@@ -864,6 +866,21 @@ public class ReSTClient {
 		return call(HttpMethod.POST, url.toString(), deserializer, 
 				new ByteArrayInputStream(propertyString(formData).getBytes()), 
 				toMap(HEADER_CONTENT_TYPE, APPLICATION_X_WWW_FORM_URLENCODED));
+	}
+	
+	/**
+	 * Send a POST to the server.
+	 * 
+	 * @param <T> type to deserialize to
+	 * @param url of server
+	 * @param body of post
+	 * @param headers additional headers for request
+	 * @param deserializer deserializer
+	 * @return response
+	 * @throws IOException on I/O error
+	 */
+	public <T> Response<T> callPost(URLBuilder url, InputStream body, Map<String, String> headers, ResponseDeserializer<T> deserializer) throws IOException {
+		return call(HttpMethod.POST, url.toString(), deserializer, body, headers);
 	}
 	
 	/**
