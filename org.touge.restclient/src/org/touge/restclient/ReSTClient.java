@@ -666,8 +666,12 @@ public class ReSTClient {
 				if (isError()) {
 					String serverMessage = connection.getResponseMessage();
 					byte[] errorMessage = readStream(connection.getErrorStream());
-					if (errorMessage != null && errorMessage.length > 0)
-						serverMessage = new String(errorMessage, connection.getContentEncoding());
+					if (errorMessage != null && errorMessage.length > 0) {
+						if (connection.getContentEncoding() != null)
+							serverMessage = new String(errorMessage, connection.getContentEncoding());
+						else 
+							serverMessage = new String(errorMessage, "UTF-8");
+					}
 					
 					if (responseBuffer != null) {
 						debugMid(responseBuffer, serverMessage);						
