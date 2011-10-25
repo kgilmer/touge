@@ -45,10 +45,7 @@ public class ReSTClient {
 	private static final String FILE_NAME = "filename";
 	private static final String LINE_ENDING = "\r\n";
 	private static final String BOUNDARY = "boundary=";
-	private static final String PARA_NAME = "name";
-	
-	private static final Map<Integer, String> HTTP_RESPONSE_TEXT = createResponseMap();
-
+	private static final String PARA_NAME = "name";	
 	
 	/**
 	 * HTTP methods supported by REST client.
@@ -188,9 +185,9 @@ public class ReSTClient {
 	public static final ErrorHandler THROW_ALL_ERRORS = new ErrorHandler() {
 
 		@Override
-		public void handleError(int code) throws IOException {
+		public void handleError(int code, String message) throws IOException {
 			if (code > 0)
-				throw new IOException("HTTP Error " + code + " was returned from the server: " + HTTP_RESPONSE_TEXT.get(code));
+				throw new IOException("HTTP Error " + code + " was returned from the server: " + message);
 			else 
 				throw new IOException("A non-HTTP error was returned from the server.");
 		}
@@ -203,9 +200,9 @@ public class ReSTClient {
 	public static final ErrorHandler THROW_5XX_ERRORS = new ErrorHandler() {
 
 		@Override
-		public void handleError(int code) throws IOException {
+		public void handleError(int code, String message) throws IOException {
 			if (code > 499 && code < 600)
-				throw new IOException("HTTP Error " + code + " was returned from the server: " + HTTP_RESPONSE_TEXT.get(code));			
+				throw new IOException("HTTP Error " + code + " was returned from the server: " + message);			
 		}
 		
 	};
@@ -276,9 +273,10 @@ public class ReSTClient {
 	public interface ErrorHandler {
 		/**
 		 * @param code the HTTP code of the error
+		 * @param human-readable error message
 		 * @throws IOException on I/O error
 		 */
-		void handleError(int code) throws IOException;
+		void handleError(int code, String message) throws IOException;
 	}
 	
 	/**
@@ -550,7 +548,7 @@ public class ReSTClient {
 				
 		final HttpURLConnection connection = connectionProvider.getConnection(httpUrl);
 		connection.setRequestMethod(method.toString());
-				
+		
 		for (ConnectionInitializer initializer : connectionInitializers)
 			initializer.initialize(connection);
 		
@@ -585,7 +583,7 @@ public class ReSTClient {
 				debugMid(debugBuffer, new String(baos.toByteArray()));
 			break;
 		case DELETE:
-			connection.setDoInput(true);
+			connection.setDoInput(true);			
 			break;
 		case HEAD:
 			connection.setDoInput(true);
@@ -666,16 +664,18 @@ public class ReSTClient {
 			@Override
 			public T getContent() throws IOException {									
 				if (isError()) {
+					String serverMessage = connection.getResponseMessage();
+					byte[] errorMessage = readStream(connection.getErrorStream());
+					if (errorMessage != null && errorMessage.length > 0)
+						serverMessage = new String(errorMessage, connection.getContentEncoding());
+					
 					if (responseBuffer != null) {
-						byte[] errorMessage = readStream(connection.getErrorStream());
-						if (errorMessage != null && errorMessage.length > 0)
-							debugMid(responseBuffer, new String(errorMessage, "UTF-8"));
-						
+						debugMid(responseBuffer, serverMessage);						
 						debugEnd(responseBuffer);
 					}
 					
 					if (errorHandler != null) 
-						errorHandler.handleError(getCode());
+						errorHandler.handleError(getCode(), serverMessage);
 						
 					if (deserializer != null)
 						return (T) deserializer.deserialize(connection.getErrorStream(), connection.getResponseCode(), 
@@ -1051,16 +1051,6 @@ public class ReSTClient {
 	}
 	
 	/**
-	 * Get the general response text associated with an HTTP Response code.
-	 * 
-	 * @param httpResponseCode HTTP code, ex 404
-	 * @return Short description of response or null if invalid or unknown code.
-	 */
-	public static String getHttpResponseText(int httpResponseCode) {
-		return  HTTP_RESPONSE_TEXT.get(httpResponseCode);
-	}
-	
-	/**
 	 * Build a URL with the URLBuilder utility interface.  This interface
 	 * will clean extra/missing path segment terminators and handle schemes.
 	 * 
@@ -1388,62 +1378,4 @@ public class ReSTClient {
 			return this.copy().append(segments);
 		}
 	}
-	
-	/**
-     * Create map of known HTTP response codes and their text labels.
-     * 
-     * @return a Map<Integer, String> of responses 
-     */
-    private static Map<Integer, String> createResponseMap()
-    {
-        Map<Integer, String> responses = new HashMap<Integer, String>();
-
-        //Responses is a map, with error code as key, and a 2 dimensional String array with 
-        //header and HTML error response, segmented where a user error-defined can be specified.
-        responses.put(Integer.valueOf(100), "Continue");
-        responses.put(Integer.valueOf(101), "Switching Protocols");
-
-        responses.put(Integer.valueOf(200), "OK");
-        responses.put(Integer.valueOf(201), "Created");
-        responses.put(Integer.valueOf(202), "Accepted");
-        responses.put(Integer.valueOf(203), "Non-Authoritative Information");
-        responses.put(Integer.valueOf(204), "No Content");
-        responses.put(Integer.valueOf(205), "Reset Content");
-        responses.put(Integer.valueOf(206), "Partial Content");
-
-        //TODO: Add all 3xx codes
-        responses.put(Integer.valueOf(300), "Multiple Choices");
-        responses.put(Integer.valueOf(301), "Moved Permanently");
-        responses.put(Integer.valueOf(302), "Found");
-        responses.put(Integer.valueOf(307), "Temporary Redirect");
-
-        responses.put(Integer.valueOf(400),
-            "Bad Request - HTTP 1.1 requests must include the Host: header.");
-        responses.put(Integer.valueOf(401), "Unauthorized");
-        responses.put(Integer.valueOf(402), "Payment Required");
-        responses.put(Integer.valueOf(403), "Forbidden");
-        responses.put(Integer.valueOf(404), "Not Found");
-        responses.put(Integer.valueOf(405), "Method not Allowed");
-        responses.put(Integer.valueOf(406), "Not Acceptable");
-        responses.put(Integer.valueOf(407), "Proxy Authentication Required");
-        responses.put(Integer.valueOf(408), "Request Timeout");
-        responses.put(Integer.valueOf(409), "Conflict");
-        responses.put(Integer.valueOf(410), "Gone");
-        responses.put(Integer.valueOf(411), "Length Required");
-        responses.put(Integer.valueOf(412), "Precondition Failed");
-        responses.put(Integer.valueOf(413), "Request Entity too Large");
-        responses.put(Integer.valueOf(414), "Request-URI too Long");
-        responses.put(Integer.valueOf(415), "Unsupported Media Type");
-        responses.put(Integer.valueOf(416), "Requested Range not Satisfiable");
-        responses.put(Integer.valueOf(417), "Expectation Failed");
-
-        responses.put(Integer.valueOf(500), "Internal Server Error");
-        responses.put(Integer.valueOf(501), "Not Implemented");
-        responses.put(Integer.valueOf(502), "Bad Gateway");
-        responses.put(Integer.valueOf(503), "Service Unavailable");
-        responses.put(Integer.valueOf(504), "Gateway Timeout");
-        responses.put(Integer.valueOf(505), "HTTP Version not Supported");
-
-        return responses;
-    }
 }

@@ -74,7 +74,7 @@ public class ReSTClient_usage {
 		restClient.setErrorHandler(new ReSTClient.ErrorHandler() {
 			
 			@Override
-			public void handleError(int code) throws IOException {
+			public void handleError(int code, String message) throws IOException {
 				System.err.println("HTTP Error " + code + " occurred.");
 			}
 		});

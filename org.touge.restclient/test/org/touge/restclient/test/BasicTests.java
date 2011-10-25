@@ -92,7 +92,7 @@ public class BasicTests extends TestCase {
 		client.setErrorHandler(new ReSTClient.ErrorHandler() {
 			
 			@Override
-			public void handleError(int code) throws IOException {
+			public void handleError(int code, String message) throws IOException {
 				throw new IOException("Error: " + code);
 			}
 		});
