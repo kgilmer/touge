@@ -263,7 +263,12 @@ public class ReSTClient {
 		/**
 		 * @return true if error code or an exception is raised, false otherwise.
 		 */
-		boolean isError();				
+		boolean isError();
+
+		/**
+		 * @return error message or null if failure to get message from server.
+		 */
+		public abstract String getErrorMessage();				
 	}
 	
 	/**
@@ -666,14 +671,7 @@ public class ReSTClient {
 			@Override
 			public T getContent() throws IOException {									
 				if (isError()) {
-					String serverMessage = connection.getResponseMessage();
-					byte[] errorMessage = readStream(connection.getErrorStream());
-					if (errorMessage != null && errorMessage.length > 0) {
-						if (connection.getContentEncoding() != null)
-							serverMessage = new String(errorMessage, connection.getContentEncoding());
-						else 
-							serverMessage = new String(errorMessage, "UTF-8");
-					}
+					String serverMessage = getErrorMessage();
 					
 					if (responseBuffer != null) {
 						debugMid(responseBuffer, serverMessage);						
@@ -713,6 +711,24 @@ public class ReSTClient {
 				}
 				
 				return response;				
+			}
+
+			@Override
+			public String getErrorMessage() {
+				try {
+					String errorMessage = connection.getResponseMessage();
+					byte[] serverMessage = readStream(connection.getErrorStream());
+					if (serverMessage != null && serverMessage.length > 0) {
+						if (connection.getContentEncoding() != null)
+							errorMessage = new String(serverMessage, connection.getContentEncoding());
+						else 
+							errorMessage = new String(serverMessage, "UTF-8");
+					}
+					
+					return errorMessage;
+				} catch (IOException e) {
+					return null;
+				}
 			}
 			
 		};				
