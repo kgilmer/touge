@@ -1,0 +1,7 @@
+<project name="org.touge">
+	<property name="target" value="jar"></property>
+	<property name="product.dir" location="${basedir}" />
+
+	<ant dir="org.touge.restclient" target="${target}"/>
+	<ant dir="org.touge.osgiutil" target="${target}"/>	
+</project>
