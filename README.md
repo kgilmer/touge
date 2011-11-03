@@ -12,3 +12,8 @@
 - Examples: http://kgilmer.github.com/touge/
 - Binaries: https://leafcutter.ci.cloudbees.com/job/restclient/lastSuccessfulBuild/artifact/org.touge.restclient/dist/
 - Javadoc: https://leafcutter.ci.cloudbees.com/job/restclient/javadoc/
+
+# OSGiUtil
+### A class for common functions with the OSGi service registry.
+- Only requires standard OSGi API as dependency.
+- Supports vistor-style service and bundle access.
