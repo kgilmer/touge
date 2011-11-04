@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -108,6 +109,7 @@ public class ReSTClient {
 		/**
 		 * @return URL as a String with scheme
 		 */
+		@Override
 		String toString();
 		
 		/**
@@ -120,6 +122,15 @@ public class ReSTClient {
 		 * @return A new instance of URLBuilder with same path and scheme as parent, with segment appended.
 		 */
 		URLBuilder copy(String ... segments);
+
+		/**
+		 * Add a query string parameter to the URL.
+		 * 
+		 * @param key key name.  Same key name can be used multiple times.
+		 * @param value value of parameter.
+		 * @return URLBuilder
+		 */
+		URLBuilder addParameter(String key, String value);
 	}
 	
 	/**
@@ -364,7 +375,7 @@ public class ReSTClient {
 
 	private ConnectionProvider connectionProvider;
 
-	private List<ConnectionInitializer> connectionInitializers;
+	private final List<ConnectionInitializer> connectionInitializers;
 	
 	private ErrorHandler errorHandler;
 	private PrintWriter debugStream;
@@ -682,7 +693,7 @@ public class ReSTClient {
 						errorHandler.handleError(getCode(), serverMessage);
 						
 					if (deserializer != null)
-						return (T) deserializer.deserialize(connection.getErrorStream(), connection.getResponseCode(), 
+						return deserializer.deserialize(connection.getErrorStream(), connection.getResponseCode(), 
 								connection.getHeaderFields());
 					
 					return null;
@@ -694,14 +705,14 @@ public class ReSTClient {
 					done = true;
 					
 					if (responseBuffer != null) {
-						debugMid(responseBuffer, ((T)response).toString());
+						debugMid(responseBuffer, response.toString());
 						debugEnd(responseBuffer);
 					}
 					
-					return (T) response;
+					return response;
 				}
 				
-				T response = (T) deserializer.deserialize(connection.getInputStream(), 
+				T response = deserializer.deserialize(connection.getInputStream(), 
 						connection.getResponseCode(), connection.getHeaderFields());
 				
 				done = true;
@@ -1143,7 +1154,7 @@ public class ReSTClient {
 			String key = i.next();		
 			sb.append(URLEncoder.encode(key, "UTF-8"));
 			sb.append("=");
-			sb.append(URLEncoder.encode((String) props.get(key), "UTF-8"));
+			sb.append(URLEncoder.encode(props.get(key), "UTF-8"));
 
 			if (i.hasNext()) {
 				sb.append("&");
@@ -1271,6 +1282,7 @@ public class ReSTClient {
 		/* (non-Javadoc)
 		 * @see com.buglabs.util.http.RestClient.ConnectionProvider#getConnection(java.lang.String)
 		 */
+		@Override
 		public HttpURLConnection getConnection(String urlStr) throws IOException {
 			URL url = new URL(urlStr);
 			return (HttpURLConnection) url.openConnection();
@@ -1301,6 +1313,7 @@ public class ReSTClient {
 	private final class URLBuilderImpl implements URLBuilder {
 		private final List<String> segments;
 		private boolean httpsScheme;
+		private List<Map.Entry<String, String>> parameters;
 		
 		/**
 		 * 
@@ -1375,6 +1388,22 @@ public class ReSTClient {
 				if (i.hasNext())
 					sb.append('/');
 			}
+			
+			try {
+				if (parameters != null) {
+					sb.append('?');
+					for (Map.Entry<String, String> parameter : parameters) {
+						sb.append(URLEncoder.encode(parameter.getKey(), "UTF-8"));
+						sb.append('=');
+						sb.append(URLEncoder.encode(parameter.getValue(), "UTF-8"));
+						
+						if (parameters.indexOf(parameter) < (parameters.size() - 1))
+							sb.append('&');
+					}
+				}
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(e);
+			}
 				
 			return sb.toString();
 		}
@@ -1413,6 +1442,36 @@ public class ReSTClient {
 			validateArguments((Object []) segments);
 			
 			return this.copy().append(segments);
+		}
+
+		@Override
+		public URLBuilder addParameter(final String key, final String value) {
+			validateArguments(key, value);
+			
+			if (parameters == null) {
+				parameters = new ArrayList<Map.Entry<String,String>>();
+			}
+			
+			parameters.add(new Map.Entry<String, String>() {
+				
+				@Override
+				public String setValue(String arg0) {
+					//Unimplemented
+					return null;
+				}
+				
+				@Override
+				public String getValue() {
+					return key;
+				}
+				
+				@Override
+				public String getKey() {					
+					return value;
+				}
+			});
+			
+			return this;
 		}
 	}
 }

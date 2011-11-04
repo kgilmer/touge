@@ -10,7 +10,6 @@ package org.touge.restclient.test;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -225,6 +224,14 @@ public class ReSTClient_usage {
 		pl(origurl);
 		// Child URL: https://myhost.net/homepage/asdf/adf/reqotwoetiywer
 		pl(newurl);
+		
+		URLBuilder purl = restClient.buildURL("myhost.net/","/homepage");
+		
+		purl.addParameter("p1", "v1");
+		purl.addParameter("p1", "v1-2");
+		purl.addParameter("p2", "v2");
+		
+		pl(purl);
 	}
 	
 	private static void pl(Object message) {
