@@ -131,6 +131,19 @@ public class ReSTClient {
 		 * @return URLBuilder
 		 */
 		URLBuilder addParameter(String key, String value);
+
+		/**
+		 * 
+		 * @param value if true, scheme will be present in toString(), otherwise will be omitted.
+		 * @return URLBuilder
+		 */
+		URLBuilder emitScheme(boolean value);
+
+		/**
+		 * @param value if true, domain is emitted in toString(), false means it will not be emitted.
+		 * @return URLBuilder
+		 */
+		URLBuilder emitDomain(boolean value);
 	}
 	
 	/**
@@ -1314,6 +1327,8 @@ public class ReSTClient {
 		private final List<String> segments;
 		private boolean httpsScheme;
 		private List<Map.Entry<String, String>> parameters;
+		private boolean emitScheme = true;
+		private boolean emitDomain = true;
 		
 		/**
 		 * 
@@ -1377,12 +1392,22 @@ public class ReSTClient {
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
 			
-			if (httpsScheme)
-				sb.append("https://");
-			else 
-				sb.append("http://");
+			if (emitScheme) {
+				if (httpsScheme)
+					sb.append("https://");
+				else 
+					sb.append("http://");
+			}			
 			
+			int count = 0;
 			for (Iterator<String> i = segments.iterator(); i.hasNext();) {
+				count++;
+				if (!emitDomain && count == 1) {
+					i.next();
+					sb.append('/');
+					continue;
+				}
+				
 				sb.append(i.next());
 				
 				if (i.hasNext())
@@ -1462,15 +1487,27 @@ public class ReSTClient {
 				
 				@Override
 				public String getValue() {
-					return key;
+					return value;
 				}
 				
 				@Override
 				public String getKey() {					
-					return value;
+					return key;
 				}
 			});
 			
+			return this;
+		}
+
+		@Override
+		public URLBuilder emitScheme(boolean value) {
+			this.emitScheme = value;
+			return this;
+		}
+
+		@Override
+		public URLBuilder emitDomain(boolean value) {
+			this.emitDomain = value;
 			return this;
 		}
 	}
