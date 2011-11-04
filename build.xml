@@ -3,6 +3,13 @@
 	<property name="deps" location="${basedir}/deps" />
 	<property name="dist" location="${basedir}/dist" />
 	
+	<!-- task to build all children components of project -->
+	<target name="call-children" description="Call targets on all project components.">
+		<ant dir="org.touge.restclient" target="${target}"/>
+		<ant dir="org.touge.osgiutil" target="${target}"/>			
+	</target>
+	
+	<!-- The following targets set the ${target} variable and run 'call-children'. -->	
 	<target name="clean">
 		<property name="target" value="clean"></property>
 		<antcall target="call-children"></antcall>
@@ -11,7 +18,18 @@
 	<target name="clobber">
 		<property name="target" value="clobber"></property>
 		<antcall target="call-children"></antcall>
+		<!-- Delete the common build file -->
 		<delete dir="${ant-build-common.dir}" />
+	</target>
+	
+	<target name="fetch.deps">
+		<property name="target" value="fetch.deps"></property>
+		<antcall target="call-children"></antcall>
+	</target>
+	
+	<target name="compile">
+		<property name="target" value="compile"></property>
+		<antcall target="call-children"></antcall>
 	</target>
 	
 	<target name="jar">
@@ -19,8 +37,13 @@
 		<antcall target="call-children"></antcall>
 	</target>
 	
-	<target name="call-children">
-		<ant dir="org.touge.restclient" target="${target}"/>
-		<ant dir="org.touge.osgiutil" target="${target}"/>			
+	<target name="javadoc">
+		<property name="target" value="javadoc"></property>
+		<antcall target="call-children"></antcall>
+	</target>
+	
+	<target name="help">
+		<property name="target" value="help"></property>
+		<antcall target="call-children"></antcall>
 	</target>
 </project>

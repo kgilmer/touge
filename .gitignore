@@ -4,3 +4,4 @@ bin/
 build-common.xml
 *.jar
 classes/
+ant-build-common
