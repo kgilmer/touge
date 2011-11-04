@@ -1,7 +1,26 @@
 <project name="org.touge">
-	<property name="target" value="jar"></property>
-	<property name="product.dir" location="${basedir}" />
-
-	<ant dir="org.touge.restclient" target="${target}"/>
-	<ant dir="org.touge.osgiutil" target="${target}"/>	
+	<property name="ant-build-common.dir" location="${basedir}/ant-build-common"></property>
+	<property name="deps" location="${basedir}/deps" />
+	<property name="dist" location="${basedir}/dist" />
+	
+	<target name="clean">
+		<property name="target" value="clean"></property>
+		<antcall target="call-children"></antcall>
+	</target>
+	
+	<target name="clobber">
+		<property name="target" value="clobber"></property>
+		<antcall target="call-children"></antcall>
+		<delete dir="${ant-build-common.dir}" />
+	</target>
+	
+	<target name="jar">
+		<property name="target" value="jar"></property>
+		<antcall target="call-children"></antcall>
+	</target>
+	
+	<target name="call-children">
+		<ant dir="org.touge.restclient" target="${target}"/>
+		<ant dir="org.touge.osgiutil" target="${target}"/>			
+	</target>
 </project>

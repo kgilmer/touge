@@ -29,10 +29,10 @@
 		</exec>
 	</target>
 
-	<exec executable="/usr/bin/git">
-		<arg line="clone" />
-		<arg line="git://github.com/kgilmer/ant-build-common.git" />
-		<arg line="/tmp/ant-build-common" />
-	</exec>
-	<import file="/tmp/ant-build-common/build-common.xml"/>	
+	<property name="ant-build-common.dir" location="/tmp/ant-build-common"></property>
+	<echo message="Importing ant-build-common in ${ant.project.name}."></echo>
+	<exec executable="/bin/sh">
+	  <arg line='-c "git clone git://github.com/kgilmer/ant-build-common.git ${ant-build-common.dir} 2&gt; /dev/null"'/>
+	</exec>	
+	<import file="${ant-build-common.dir}/build-common.xml"/>
 </project>
