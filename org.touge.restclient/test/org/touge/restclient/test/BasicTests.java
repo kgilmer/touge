@@ -76,6 +76,12 @@ public class BasicTests extends TestCase {
 		assertTrue(l.size() > 0);		
 	}
 	
+	public void testBasicAuth() throws IOException {
+		ReSTClient client = new ReSTClient(new ReSTClient.BasicAuthConnectionInitializer("username", "password"));
+		
+		client.callGet("http://basicauthserver.com");
+	}
+	
 	public void testErrorHandling() throws IOException {
 		String testUrl = "http://kgilmer.github.com/touge/";
 		String testBadUrl = "http://shinyama.info/notfound";

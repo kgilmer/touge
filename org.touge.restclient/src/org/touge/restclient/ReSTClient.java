@@ -383,6 +383,29 @@ public class ReSTClient {
 			return name;
 		}
 	}
+	
+	/**
+	 * A Connection Initializer that sends Basic Authentication header in the request.
+	 *
+	 */
+	public static class BasicAuthConnectionInitializer implements ConnectionInitializer {
+
+		private final String field;
+
+		/**
+		 * @param username
+		 * @param password
+		 */
+		public BasicAuthConnectionInitializer(String username, String password) {
+			String userpass = username + ":" + password;
+			field = "Basic " + Base64.encodeBytes(userpass.getBytes()); 
+		}
+		
+		@Override
+		public void initialize(HttpURLConnection connection) {
+			connection.addRequestProperty("Authorization", field);
+		}		
+	}
 
 	private static Random RNG;
 
