@@ -443,6 +443,16 @@ public class ReSTClient {
 		this();
 		connectionInitializers.add(initializer);
 	}
+		
+	/**
+	 * Creates a ReSTClient with basic authentication credentials.
+	 * @param username
+	 * @param password
+	 */
+	public ReSTClient(String username, String password) {
+		this();
+		connectionInitializers.add(new BasicAuthConnectionInitializer(username, password));
+	}
 	
 	/**
 	 * @param connectionProvider ConnectionProvider
