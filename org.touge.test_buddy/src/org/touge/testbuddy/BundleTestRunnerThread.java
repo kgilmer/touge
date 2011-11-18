@@ -173,7 +173,7 @@ public class BundleTestRunnerThread extends Thread {
 		bos.flush();
 		bos.close();
 
-		log.log(LogService.LOG_INFO, "Test Suite Complete: " + tc.getName());
+		log.log(LogService.LOG_INFO, "Test Suite Complete: " + tc.getName() + " (" + outFile.toString() + ")");
 		log.log(LogService.LOG_INFO, "Results ~ Errors: " + result.errorCount() + " Failures: " + result.failureCount());
 
 		if (result.errorCount() > 0 || result.failureCount() > 0)
