@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>org.touge.osgi.testrunner</name>
+	<name>org.touge.testbuddy</name>
 	<comment></comment>
 	<projects>
 	</projects>
