@@ -1,9 +1,9 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: OSGi Test-buddy
-Bundle-SymbolicName: org.touge.osgi.testrunner
+Bundle-SymbolicName: org.touge.testbuddy
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: org.touge.osgi.testrunner.Activator
+Bundle-Activator: org.touge.testbuddy.Activator
 Import-Package: 
  org.osgi.framework;version="1.3.0",
  org.osgi.util.tracker;resolution:=optional

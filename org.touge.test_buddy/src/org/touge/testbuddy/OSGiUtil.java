@@ -1,4 +1,4 @@
-package org.touge.osgi.testrunner;
+package org.touge.testbuddy;
 
 /*
  * This file is in the public domain, furnished "as is", without technical

@@ -25,7 +25,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  *******************************************************************************/
-package org.touge.osgi.testrunner;
+package org.touge.testbuddy;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
-<project name="org.test_buddy">
+<project name="org.touge.test_buddy">
 	<property name="wget.bin" location="/usr/bin/wget" />
 		<property name="product.dir" location="${basedir}" />
 		<property name="dependencies.dir" location="${product.dir}/deps" />
-		<property name="build-common.url" value="http://shinyama.info/build-common.xml" />
-		
+				
 		<target name="fetch.deps" description="download dependencies">
 			<exec executable="${wget.bin}">
 				<arg line="-P ${dependencies.dir}" />
@@ -27,13 +26,6 @@
 				<arg line="https://github.com/downloads/KentBeck/junit/junit-4.9.jar" />
 			</exec>
 		</target>
-
-		<exec executable="${wget.bin}">
-			<arg line="-P ${dependencies.dir}" />
-			<arg line="--no-check-certificate" />
-			<arg line="-nc" />
-			<arg line="${build-common.url}" />
-		</exec>
 	
 		<target name="jar" depends="compile" description="create a Jar file for the application">
 			<mkdir dir="${dist.dir}" />
@@ -50,5 +42,10 @@
 			</jar>
 		</target>
 	
-		<import file="${dependencies.dir}/build-common.xml"/>	
-	</project>
+	<property name="ant-build-common.dir" location="/tmp/ant-build-common"></property>
+	<echo message="Importing ant-build-common in ${ant.project.name}."></echo>
+	<exec executable="/bin/sh">
+	  <arg line='-c "git clone git://github.com/kgilmer/ant-build-common.git ${ant-build-common.dir} 2&gt; /dev/null"'/>
+	</exec>	
+	<import file="${ant-build-common.dir}/build-common.xml"/>	
+</project>

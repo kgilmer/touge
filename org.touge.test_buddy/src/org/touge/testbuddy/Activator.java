@@ -1,4 +1,4 @@
-package org.touge.osgi.testrunner;
+package org.touge.testbuddy;
 
 import java.io.File;
 
