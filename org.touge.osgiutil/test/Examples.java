@@ -7,7 +7,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 import org.touge.osgiutil.OSGiUtil;
-import org.touge.osgiutil.OSGiUtil.OSGiServiceException;
 import org.touge.osgiutil.OSGiUtil.ServiceFollower;
 import org.touge.osgiutil.OSGiUtil.ServiceVisitor;
 import org.touge.osgiutil.OSGiUtil.TrackingCollection;
@@ -23,13 +22,13 @@ public class Examples {
 		
 		//### You want to get a single reference to a specific service.  
 		//You expect only one and you want the operation to fail if the service is not available for some reason.
+				
+		Service1 service = 
+				(Service1) OSGiUtil.getServiceInstance(context, Service1.class.getName());
 		
-		try {
-			Service1 service = 
-					(Service1) OSGiUtil.getServiceInstance(context, Service1.class.getName());
-		} catch (OSGiServiceException e) {
-			//Service was not available.  Panic.
-		}
+		if (service == null)
+			System.out.println("Service was not available.  Panic.");
+		
 		
 		//### You want to do something once a set of services is available.  
 		// You only want to know when the complete set exists.
