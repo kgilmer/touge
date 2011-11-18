@@ -1,0 +1,20 @@
+This is an OSGi bundle intended to be used to run JUnit test suites 
+in an automated fashion.  It also exports the JUnit and Hamcrest libraries to
+simplify test environment setup.
+
+This bundle is not intended to be used outside of a build/test environment.  It
+bundles dependent code rather than imports to minimize runtime dependencies.
+
+Upon bundle activation, the bundle will:
+1. Determine directory where test results are stored, create directory if necessary.
+2. Wait for a configurable amount of time for other bundles/services to start.
+3. Scan the OSGi service registry for junit.framework.TestSuite
+4. For each test suit, execute the tests and store the results.
+5. Wait for a configurable amount of time, then shutdown the entire framework.
+
+Configuration Options
+testrunner.report.dir : Path to directory where test results are to be stored.
+testrunner.startup.delay : Amount of time to wait before executing tests.
+testrunner.shutdown.delay : Amount of time to wait before framework shutdown after test execution.
+testrunner.output.verbose : Verbose output
+testrunner.keeprunning : if set to true bundle will not shutdown framework after test execution completes.
