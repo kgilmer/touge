@@ -14,7 +14,7 @@ Upon bundle activation, the bundle will:
 
 Configuration Options
 testrunner.report.dir : Path to directory where test results are to be stored.
-testrunner.startup.delay : Amount of time to wait before executing tests.
-testrunner.shutdown.delay : Amount of time to wait before framework shutdown after test execution.
+testrunner.startup.delay : Amount of time to wait before executing tests. (millis)
+testrunner.shutdown.delay : Amount of time to wait before framework shutdown after test execution. (millis)
 testrunner.output.verbose : Verbose output
 testrunner.keeprunning : if set to true bundle will not shutdown framework after test execution completes.
