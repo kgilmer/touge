@@ -627,24 +627,28 @@ public class ReSTClient {
 			connection.setDoOutput(false);
 			break;
 		case POST:
-			connection.setDoOutput(true);	
-			baos = new ByteArrayOutputStream();
-			copy(content, baos);					
-			writeRequestBody(connection, baos.toByteArray());	
-			baos.close();
+			if (content != null) {
+				connection.setDoOutput(true);	
+				baos = new ByteArrayOutputStream();
+				copy(content, baos);					
+				writeRequestBody(connection, baos.toByteArray());	
+				baos.close();			
 			
-			if (debugStream != null)
-				debugMid(debugBuffer, new String(baos.toByteArray()));
+				if (debugStream != null)
+					debugMid(debugBuffer, new String(baos.toByteArray()));
+			}
 			break;
 		case PUT:
-			connection.setDoOutput(true);
-			baos = new ByteArrayOutputStream();
-			copy(content, baos);
-			writeRequestBody(connection, baos.toByteArray());
-			baos.close();
-			
-			if (debugStream != null)
-				debugMid(debugBuffer, new String(baos.toByteArray()));
+			if (content != null) {
+				connection.setDoOutput(true);
+				baos = new ByteArrayOutputStream();
+				copy(content, baos);
+				writeRequestBody(connection, baos.toByteArray());
+				baos.close();
+						
+				if (debugStream != null)
+					debugMid(debugBuffer, new String(baos.toByteArray()));
+			}
 			break;
 		case DELETE:
 			connection.setDoInput(true);			
