@@ -56,6 +56,7 @@ public class URLBuilderTestCase extends TestCase {
 		purl.addParameter("p1", "v1-2");
 		purl.addParameter("p2", "v2");
 		
-		assertTrue(purl.toString().equals("http://myhost.net/homepage?v1=p1&v1-2=p1&v2=p2"));
+		System.out.println(purl.toString());
+		assertTrue(purl.toString().equals("http://myhost.net/homepage?p1=v1&p1=v1-2&p2=v2"));		                                   
 	}
 }
