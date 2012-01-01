@@ -22,7 +22,7 @@ import org.touge.restclient.RestClient.ResponseDeserializer;
 import org.touge.restclient.RestClient.URLBuilder;
 
 // ### Examples of how to use ReSTClient.
-public class ReSTClient_usage {
+public class RestClient_usage {
 	
 	public static void main(String[] args) throws IOException {		
 		

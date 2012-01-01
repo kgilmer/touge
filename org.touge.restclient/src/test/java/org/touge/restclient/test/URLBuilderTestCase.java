@@ -5,7 +5,7 @@ import junit.framework.TestCase;
 import org.touge.restclient.RestClient;
 import org.touge.restclient.RestClient.URLBuilder;
 
-public class URLBuilderTests extends TestCase {
+public class URLBuilderTestCase extends TestCase {
 
 	public void testURLBuilder() {
 		RestClient restClient = new RestClient();
