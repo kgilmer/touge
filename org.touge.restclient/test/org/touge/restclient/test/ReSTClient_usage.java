@@ -15,18 +15,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.touge.restclient.ReSTClient;
-import org.touge.restclient.ReSTClient.HttpMethod;
-import org.touge.restclient.ReSTClient.Response;
-import org.touge.restclient.ReSTClient.ResponseDeserializer;
-import org.touge.restclient.ReSTClient.URLBuilder;
+import org.touge.restclient.RestClient;
+import org.touge.restclient.RestClient.HttpMethod;
+import org.touge.restclient.RestClient.Response;
+import org.touge.restclient.RestClient.ResponseDeserializer;
+import org.touge.restclient.RestClient.URLBuilder;
 
 // ### Examples of how to use ReSTClient.
 public class ReSTClient_usage {
 	
 	public static void main(String[] args) throws IOException {		
 		
-		ReSTClient restClient = new ReSTClient();
+		RestClient restClient = new RestClient();
 				
 		//The most common simple thing to do is GET and return the body
 		//as a String.  ReSTClient:
@@ -44,7 +44,7 @@ public class ReSTClient_usage {
 		//one of the few predefined deserializers.
 		//Call GET on localhost using long form, pass in a predefined deserializer, no body (since GET), and no custom headers.
 		Response<String> resp = 
-			restClient.call(HttpMethod.GET, "localhost", ReSTClient.STRING_DESERIALIZER, null, null);
+			restClient.call(HttpMethod.GET, "localhost", RestClient.STRING_DESERIALIZER, null, null);
 		pl("Response: " + resp.getContent());
 		
 		//Call get and provide a custom deserializer into a custom type.
@@ -70,7 +70,7 @@ public class ReSTClient_usage {
 			pl(resp.getContent());		
 		
 		// Or we can use an error handler instead.
-		restClient.setErrorHandler(new ReSTClient.ErrorHandler() {
+		restClient.setErrorHandler(new RestClient.ErrorHandler() {
 			
 			@Override
 			public void handleError(int code, String message) throws IOException {
@@ -98,16 +98,16 @@ public class ReSTClient_usage {
 					
 		// Call GET and pass back the raw response InputStream to the client.
 		pl(
-				restClient.callGet(localhost, ReSTClient.INPUTSTREAM_DESERIALIZER)
+				restClient.callGet(localhost, RestClient.INPUTSTREAM_DESERIALIZER)
 					.getContent().available());
 		
 		// Create a rest client that will throw exceptions on all HTTP and I/O errors.
-		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
+		restClient.setErrorHandler(RestClient.THROW_ALL_ERRORS);
 		
 		//This GET will deserialize server response as a string and 
 		//throw IOException on any error.  
 		Response<String> rs = 
-			restClient.callGet(localhost, ReSTClient.STRING_DESERIALIZER);
+			restClient.callGet(localhost, RestClient.STRING_DESERIALIZER);
 		
 		pl(rs.getContent());
 		
@@ -115,17 +115,17 @@ public class ReSTClient_usage {
 		restClient.setErrorHandler(null);
 					
 		//Since we do not have an error handler, this call will not throw IOException.
-		rs = restClient.callGet(localhost.copy("asdf"), ReSTClient.STRING_DESERIALIZER);
+		rs = restClient.callGet(localhost.copy("asdf"), RestClient.STRING_DESERIALIZER);
 		
 		if (rs.isError())
 			pl("Error: " + rs.getCode());
 		
 		//Set the error handler to throw all errors.
-		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
+		restClient.setErrorHandler(RestClient.THROW_ALL_ERRORS);
 		
 		//The following line will throw IOException.
 		try {
-			rs = restClient.callGet(localhost.copy("/asdf"), ReSTClient.STRING_DESERIALIZER);
+			rs = restClient.callGet(localhost.copy("/asdf"), RestClient.STRING_DESERIALIZER);
 			//Error is thrown when trying to get content.
 			pl(rs.getContent());
 		} catch (IOException e) {
@@ -141,11 +141,11 @@ public class ReSTClient_usage {
 		}
 		
 		// Only throw errors relating to server problems.
-		restClient.setErrorHandler(ReSTClient.THROW_5XX_ERRORS);
+		restClient.setErrorHandler(RestClient.THROW_5XX_ERRORS);
 		
 		//following line will throw IOException 
 		try {
-			rs = restClient.callGet("localhost/asdf", ReSTClient.STRING_DESERIALIZER);
+			rs = restClient.callGet("localhost/asdf", RestClient.STRING_DESERIALIZER);
 			//Error is not thrown when trying to get content because it is not a server error, but rather a 404.
 			
 			pl("Should be true: " + rs.isError());
@@ -154,10 +154,10 @@ public class ReSTClient_usage {
 		}
 		
 		//following line will throw IOException 
-		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
+		restClient.setErrorHandler(RestClient.THROW_ALL_ERRORS);
 		try {
 			//Error is thrown when trying to get content.
-			String respstr = restClient.callGetContent(localhost.copy("/asdf"), ReSTClient.STRING_DESERIALIZER);				
+			String respstr = restClient.callGetContent(localhost.copy("/asdf"), RestClient.STRING_DESERIALIZER);				
 		} catch (IOException e) {
 			pl("Error: " + e.getMessage());
 		}
@@ -166,12 +166,12 @@ public class ReSTClient_usage {
 		Map<String, Object> body = new HashMap<String, Object>();
 		
 		body.put("tkey", "tval");
-		body.put("myfile", new ReSTClient.FormFile("/tmp/boo.txt", "text/plain"));
+		body.put("myfile", new RestClient.FormFile("/tmp/boo.txt", "text/plain"));
 		
 		restClient.callPostMultipart("localhost", body);
 		
 		//PUT, short form, throw exception on error
-		restClient.setErrorHandler(ReSTClient.THROW_ALL_ERRORS);
+		restClient.setErrorHandler(RestClient.THROW_ALL_ERRORS);
 		Response<Integer> mr = restClient.callPut("localhost", new ByteArrayInputStream("boo".getBytes()));
 		
 		//HTTP DELETE

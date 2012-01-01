@@ -33,7 +33,7 @@ import java.util.Random;
  * @author kgilmer
  *
  */
-public class ReSTClient {
+public class RestClient {
 	
 	private static final String HEADER_CONTENT_TYPE = "Content-Type";
 	private static final String APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded";
@@ -421,7 +421,7 @@ public class ReSTClient {
 	/**
 	 * Default constructor.
 	 */
-	public ReSTClient() {
+	public RestClient() {
 		this.connectionProvider = new DefaultConnectionProvider();
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = null;
@@ -430,7 +430,7 @@ public class ReSTClient {
 	/**
 	 * @param connectionProvider ConnectionProvider
 	 */
-	public ReSTClient(ConnectionProvider connectionProvider) {
+	public RestClient(ConnectionProvider connectionProvider) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = null;
@@ -439,7 +439,7 @@ public class ReSTClient {
 	/**
 	 * @param initializer ConnectionInitializer
 	 */
-	public ReSTClient(ConnectionInitializer initializer) {
+	public RestClient(ConnectionInitializer initializer) {
 		this();
 		connectionInitializers.add(initializer);
 	}
@@ -449,7 +449,7 @@ public class ReSTClient {
 	 * @param username
 	 * @param password
 	 */
-	public ReSTClient(String username, String password) {
+	public RestClient(String username, String password) {
 		this();
 		connectionInitializers.add(new BasicAuthConnectionInitializer(username, password));
 	}
@@ -458,7 +458,7 @@ public class ReSTClient {
 	 * @param connectionProvider ConnectionProvider
 	 * @param initializer ConnectionInitializer
 	 */
-	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer) {
+	public RestClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer) {
 		this(connectionProvider);
 		connectionInitializers.add(initializer);
 	}
@@ -467,7 +467,7 @@ public class ReSTClient {
 	 * @param initializer ConnectionInitializer
 	 * @param deserializer ResponseDeserializer<T>
 	 */
-	public ReSTClient(ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
+	public RestClient(ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
 		this(initializer);
 	}
 	
@@ -476,7 +476,7 @@ public class ReSTClient {
 	 * @param initializer ConnectionInitializer
 	 * @param deserializer ResponseDeserializer<T>
 	 */
-	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
+	public RestClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, ResponseDeserializer<?> deserializer) {
 		this(connectionProvider, initializer);
 	}
 	
@@ -486,7 +486,7 @@ public class ReSTClient {
 	 * @param deserializer ResponseDeserializer<T>
 	 * @param errorHandler ErrorHandler
 	 */
-	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
+	public RestClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
 			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
@@ -501,7 +501,7 @@ public class ReSTClient {
 	 * @param errorHandler ErrorHandler
 	 * @param debugStream OutputStream to pass debug messages to.  If null, no debug output.
 	 */
-	public ReSTClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
+	public RestClient(ConnectionProvider connectionProvider, ConnectionInitializer initializer, 
 			ResponseDeserializer<?> deserializer, ErrorHandler errorHandler, PrintWriter debugStream) {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
@@ -751,7 +751,7 @@ public class ReSTClient {
 				
 				if (deserializer == null) {
 					// If no deserializer is specified, use String.
-					T response = (T) ReSTClient.STRING_DESERIALIZER.deserialize(connection.getInputStream(), 0, null);
+					T response = (T) RestClient.STRING_DESERIALIZER.deserialize(connection.getInputStream(), 0, null);
 					done = true;
 					
 					if (responseBuffer != null) {

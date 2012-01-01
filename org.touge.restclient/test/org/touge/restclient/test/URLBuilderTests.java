@@ -2,13 +2,13 @@ package org.touge.restclient.test;
 
 import junit.framework.TestCase;
 
-import org.touge.restclient.ReSTClient;
-import org.touge.restclient.ReSTClient.URLBuilder;
+import org.touge.restclient.RestClient;
+import org.touge.restclient.RestClient.URLBuilder;
 
 public class URLBuilderTests extends TestCase {
 
 	public void testURLBuilder() {
-		ReSTClient restClient = new ReSTClient();
+		RestClient restClient = new RestClient();
 		
 		//This URLBuilder builds https://citibank.com/secureme/halp	
 		String url = restClient.buildURL("htTPS://citibank.com/secureme/").append("/halp").toString();

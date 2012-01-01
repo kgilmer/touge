@@ -9,8 +9,8 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
-import org.touge.restclient.ReSTClient;
-import org.touge.restclient.ReSTClient.Response;
+import org.touge.restclient.RestClient;
+import org.touge.restclient.RestClient.Response;
 
 /**
  * Base tests for ReSTClient.
@@ -25,17 +25,17 @@ public class BasicTests extends TestCase {
 	 */
 	public void testGET() throws IOException {
 		String testUrl = "http://kgilmer.github.com/touge/";
-		ReSTClient client = new ReSTClient();
+		RestClient client = new RestClient();
 		
 		//Simplest case
 		String res = client.callGet(testUrl);
 		
 		assertNotNull(res);
 		
-		assertTrue(res.contains(ReSTClient.class.getSimpleName()));
+		assertTrue(res.contains(RestClient.class.getSimpleName()));
 		
 		//Slightly more complex, specify String deserializer		
-		String res2 = client.callGet(testUrl, ReSTClient.STRING_DESERIALIZER).getContent();
+		String res2 = client.callGet(testUrl, RestClient.STRING_DESERIALIZER).getContent();
 		
 		assertNotNull(res2);
 		assertTrue(res.equals(res2));
@@ -61,8 +61,8 @@ public class BasicTests extends TestCase {
 		assertTrue(res3.equals(res2));*/
 		
 		//Test readStream
-		InputStream is = client.callGet(testUrl, ReSTClient.INPUTSTREAM_DESERIALIZER).getContent();
-		String res4 = new String(ReSTClient.readStream(is), "UTF-8");
+		InputStream is = client.callGet(testUrl, RestClient.INPUTSTREAM_DESERIALIZER).getContent();
+		String res4 = new String(RestClient.readStream(is), "UTF-8");
 		System.out.println("size: " + res2.length() + " " + res4.length());
 		assertNotNull(res4);
 		assertTrue(res4.equals(res2));
@@ -77,7 +77,7 @@ public class BasicTests extends TestCase {
 	}
 	
 	public void testBasicAuth() throws IOException {
-		ReSTClient client = new ReSTClient(new ReSTClient.BasicAuthConnectionInitializer("username", "password"));
+		RestClient client = new RestClient(new RestClient.BasicAuthConnectionInitializer("username", "password"));
 		
 		client.callGet("http://basicauthserver.com");
 	}
@@ -85,17 +85,17 @@ public class BasicTests extends TestCase {
 	public void testErrorHandling() throws IOException {
 		String testUrl = "http://kgilmer.github.com/touge/";
 		String testBadUrl = "http://shinyama.info/notfound";
-		ReSTClient client = new ReSTClient();
+		RestClient client = new RestClient();
 		
 		client.setErrorHandler(null);
 		
-		Response<String> resp = client.callGet(testUrl, ReSTClient.STRING_DESERIALIZER);
+		Response<String> resp = client.callGet(testUrl, RestClient.STRING_DESERIALIZER);
 		assertFalse(resp.isError());
 		//Should not throw exception.
-		resp = client.callGet(testBadUrl, ReSTClient.STRING_DESERIALIZER);
+		resp = client.callGet(testBadUrl, RestClient.STRING_DESERIALIZER);
 		assertTrue(resp.isError());
 		
-		client.setErrorHandler(new ReSTClient.ErrorHandler() {
+		client.setErrorHandler(new RestClient.ErrorHandler() {
 			
 			@Override
 			public void handleError(int code, String message) throws IOException {
@@ -106,7 +106,7 @@ public class BasicTests extends TestCase {
 		boolean exceptionThrown = false;
 		//good url, should not throw exception
 		try {
-			resp = client.callGet(testUrl, ReSTClient.STRING_DESERIALIZER);
+			resp = client.callGet(testUrl, RestClient.STRING_DESERIALIZER);
 		} catch (IOException e) {
 			exceptionThrown = true;
 		}
@@ -114,7 +114,7 @@ public class BasicTests extends TestCase {
 		
 		//bad url, should now throw exception
 		try {
-			resp = client.callGet(testBadUrl, ReSTClient.STRING_DESERIALIZER);
+			resp = client.callGet(testBadUrl, RestClient.STRING_DESERIALIZER);
 			resp.getContent();
 		} catch (IOException e) {
 			exceptionThrown = true;
@@ -122,11 +122,11 @@ public class BasicTests extends TestCase {
 		assertTrue(exceptionThrown);
 	}
 	
-	private class CustomObjectArrayDeserializer implements ReSTClient.ResponseDeserializer<List<Object>> {
+	private class CustomObjectArrayDeserializer implements RestClient.ResponseDeserializer<List<Object>> {
 
 		@Override
 		public List<Object> deserialize(InputStream input, int responseCode, Map<String, List<String>> headers) throws IOException {
-			String s = new String(ReSTClient.readStream(input), "UTF-8");
+			String s = new String(RestClient.readStream(input), "UTF-8");
 			List<Object> tl = new ArrayList<Object>(Arrays.asList(s.split(" ")));
 			
 			return tl;
