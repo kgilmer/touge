@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import org.touge.restclient.Base64;
-
 /**
  * A client library for accessing resources via HTTP.
  * 
@@ -212,10 +210,7 @@ public class RestClient {
 
 		@Override
 		public void handleError(int code, String message) throws IOException {
-			if (code > 0)
-				throw new IOException("HTTP Error " + code + " was returned from the server: " + message);
-			else 
-				throw new IOException("A non-HTTP error was returned from the server.");
+			throw new IOException("HTTP Error " + code + " was returned from the server: " + message);			
 		}
 		
 	};
@@ -730,6 +725,7 @@ public class RestClient {
 					int code = getCode();
 					return code >= HttpURLConnection.HTTP_BAD_REQUEST && code < HttpURLConnection.HTTP_VERSION;
 				} catch (IOException e) {
+					e.printStackTrace();
 					return true;
 				}		
 			}
