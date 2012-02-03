@@ -1,7 +1,6 @@
 package org.touge.restclient.test;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.List;
@@ -123,8 +122,8 @@ public class CacheTestCase extends TestCase {
 					}
 					
 					@Override
-					public InputStream getInputStream() {						
-						return (InputStream) cache.get(key)[CONTENT_INDEX];
+					public byte[] getContent() {						
+						return (byte[]) cache.get(key)[CONTENT_INDEX];
 					}
 					
 					@Override
@@ -147,7 +146,7 @@ public class CacheTestCase extends TestCase {
 		public void put(String key, HttpGETCacheEntry entry) {
 			addCalled = true;
 			Object [] ov = new Object[3];
-			ov[CONTENT_INDEX] = entry.getInputStream();
+			ov[CONTENT_INDEX] = entry.getContent();
 			ov[HEADERS_INDEX] = entry.getHeaders();
 			ov[CODE_INDEX] = entry.getResponseCode();
 			

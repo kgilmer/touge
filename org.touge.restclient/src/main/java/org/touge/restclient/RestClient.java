@@ -97,7 +97,7 @@ public class RestClient {
 		/**
 		 * @return input stream of entry
 		 */
-		InputStream getInputStream();
+		byte [] getContent();
 		/**
 		 * @return headers of entry
 		 */ 
@@ -380,15 +380,15 @@ public class RestClient {
 					public int getResponseCode() {
 						return ((Integer) cache.get(key)[CODE_INDEX]).intValue();
 					}
-					
-					@Override
-					public InputStream getInputStream() {						
-						return (InputStream) cache.get(key)[CONTENT_INDEX];
-					}
-					
+										
 					@Override
 					public Map<String, List<String>> getHeaders() {						
 						return (Map<String, List<String>>) cache.get(key)[HEADERS_INDEX];
+					}
+
+					@Override
+					public byte[] getContent() {
+						return (byte []) cache.get(key)[CONTENT_INDEX];
 					}
 				};
 			}
@@ -406,12 +406,12 @@ public class RestClient {
 		@Override
 		public void put(String key, HttpGETCacheEntry entry) {
 			if (entry != null) {
-				Object [] ov = new Object[3];
-				ov[CONTENT_INDEX] = entry.getInputStream();
+				Object [] ov = new Object[3];			
+				ov[CONTENT_INDEX] = entry.getContent();
 				ov[HEADERS_INDEX] = entry.getHeaders();
 				ov[CODE_INDEX] = entry.getResponseCode();
 				
-				cache.put(key, ov);
+				cache.put(key, ov);						
 			} else {
 				cache.remove(key);
 			}
@@ -733,8 +733,8 @@ public class RestClient {
 		
 		validateArguments(method, url);		
 		
-		String httpUrl = url;
-		if (!url.toLowerCase().startsWith("http://"))
+		String httpUrl = url.toLowerCase();
+		if (!httpUrl.startsWith("http://") && !httpUrl.startsWith("https://"))
 			httpUrl = "http://" + url;
 		
 		StringBuilder debugBuffer = null;
@@ -745,7 +745,10 @@ public class RestClient {
 		
 		HttpGETCacheEntry cacheEntry = null;
 		if (method == HttpMethod.GET && contentCache != null && (cacheEntry = contentCache.get(url)) != null) {
-			connection = new CachedConnectionProvider(cacheEntry.getInputStream(), cacheEntry.getHeaders(), cacheEntry.getResponseCode());
+			connection = new CachedConnectionProvider(cacheEntry.getContent(), cacheEntry.getHeaders(), cacheEntry.getResponseCode());
+			
+			if (debugStream != null)
+				debugMid(debugBuffer, "[CACHE HIT]");
 		} else {
 			connection = connectionProvider.getConnection(httpUrl);
 			connection.setRequestMethod(method.toString());
@@ -888,29 +891,42 @@ public class RestClient {
 					return null;
 				}
 				
-				final InputStream inputStream = connection.getInputStream();
+				InputStream inputStream = connection.getInputStream();
 				final int responseCode = connection.getResponseCode();
 				final Map<String, List<String>> headerFields = connection.getHeaderFields();
-				
+				HttpGETCacheEntry entry = null;				
 				if (contentCache != null) {
-					contentCache.put(url, new HttpGETCacheEntry() {
+					final byte[] buf = readStream(connection.getInputStream());
+				
+					
+					entry = new HttpGETCacheEntry() {
 						
 						@Override
 						public int getResponseCode() {
 							return responseCode;
-						}
-						
-						@Override
-						public InputStream getInputStream() {
-							return inputStream;
-						}
+						}											
 						
 						@Override
 						public Map<String, List<String>> getHeaders() {
 							return headerFields;
 						}
-					});
+
+						@Override
+						public byte[] getContent() {							
+							return buf;
+						}
+					};
+					contentCache.put(url, entry);
+					
+					inputStream = new ByteArrayInputStream(buf);
+					
+					if (responseBuffer != null) 
+						debugMid(responseBuffer, "[CACHED RESPONSE]");
+				} else if (responseBuffer != null) {
+					debugMid(responseBuffer, "[NOT CACHING, INVALID RESPONSE]");					
 				}
+				
+				if (entry != null)
 				
 				if (deserializer == null) {
 					// If no deserializer is specified, use String.
@@ -1717,11 +1733,11 @@ public class RestClient {
 	 */
 	private final class CachedConnectionProvider extends HttpURLConnection {
 
-		private final InputStream content;
+		private final byte[] content;
 		private final Map<String, List<String>> headers;
 		private final int responseCode;
 
-		public CachedConnectionProvider(InputStream content, Map<String, List<String>> headerFields, int responseCode) {
+		public CachedConnectionProvider(byte[] content, Map<String, List<String>> headerFields, int responseCode) {
 			super(null);
 			this.content = content;			
 			this.headers = headerFields;
@@ -1757,7 +1773,7 @@ public class RestClient {
 		
 		@Override
 		public InputStream getInputStream() throws IOException {
-			return content;
+			return new ByteArrayInputStream(content);
 		}		
 		
 		@Override
