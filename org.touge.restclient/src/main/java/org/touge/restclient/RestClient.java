@@ -364,6 +364,60 @@ public class RestClient {
 		}
 	}
 	
+	public static class HashMapCache implements RestClient.HttpGETCache {
+		private Object[] data;
+		private final int CONTENT_INDEX = 0;
+		private final int HEADERS_INDEX = 1;
+		private final int CODE_INDEX = 2;
+		private final Map<String, Object[]> cache = new HashMap<String, Object[]>();
+
+		@Override
+		public HttpGETCacheEntry get(final String key) {		
+			if (cache.containsKey(key)) {
+				return new RestClient.HttpGETCacheEntry() {
+					
+					@Override
+					public int getResponseCode() {
+						return ((Integer) cache.get(key)[CODE_INDEX]).intValue();
+					}
+					
+					@Override
+					public InputStream getInputStream() {						
+						return (InputStream) cache.get(key)[CONTENT_INDEX];
+					}
+					
+					@Override
+					public Map<String, List<String>> getHeaders() {						
+						return (Map<String, List<String>>) cache.get(key)[HEADERS_INDEX];
+					}
+				};
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Clear the map
+		 */
+		public void clear() {
+			cache.clear();
+		}
+
+		@Override
+		public void put(String key, HttpGETCacheEntry entry) {
+			if (entry != null) {
+				Object [] ov = new Object[3];
+				ov[CONTENT_INDEX] = entry.getInputStream();
+				ov[HEADERS_INDEX] = entry.getHeaders();
+				ov[CODE_INDEX] = entry.getResponseCode();
+				
+				cache.put(key, ov);
+			} else {
+				cache.remove(key);
+			}
+		}
+	}
+	
 	/**
 	 * Used to specify a file to upload in a multipart POST.
 	 *
