@@ -5,7 +5,6 @@
  */
 package org.touge.restclient;
 
-import java.awt.color.ProfileDataException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1678,7 +1677,7 @@ public class RestClient {
 		@Override
 		public void setRequestMethod(String method) throws ProtocolException {
 			if (!method.equals("GET"))
-				throw new ProfileDataException(CachedConnectionProvider.class.getName() + " only supports GET.");
+				throw new ProtocolException(CachedConnectionProvider.class.getName() + " only supports GET.");
 		}
 		
 		@Override
