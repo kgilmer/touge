@@ -5,6 +5,7 @@
  */
 package org.touge.restclient;
 
+import java.awt.color.ProfileDataException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -15,6 +16,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -72,6 +74,41 @@ public class RestClient {
 		 * @throws IOException on I/O error.
 		 */
 		HttpURLConnection getConnection(String urlStr) throws IOException;
+	}
+	
+	/**
+	 * A caching interface clients may set to enable caching of GETs.
+	 * Client implementation must handle caching logic such as expiring entries and managing resources.
+	 */
+	public interface HttpGETCache {
+		
+		/**
+		 * @param key cache key
+		 * @return content as InputStream or null if content doesn't exist.
+		 */
+		HttpGETCacheEntry get(String key);
+		
+		void put(String key, HttpGETCacheEntry entry);		
+	}
+	
+	/**
+	 * Represents all information that should be cached by HttpGETCache implementation.
+	 *
+	 */
+	public interface HttpGETCacheEntry {
+		/**
+		 * @return input stream of entry
+		 */
+		InputStream getInputStream();
+		/**
+		 * @return headers of entry
+		 */ 
+		Map<String, List<String>> getHeaders();
+		
+		/**
+		 * @return response code of entry
+		 */
+		int getResponseCode();
 	}
 
 	/**
@@ -436,9 +473,10 @@ public class RestClient {
 
 	private final List<ConnectionInitializer> connectionInitializers;
 	
+	private HttpGETCache contentCache;
+	
 	private ErrorHandler errorHandler;
 	private PrintWriter debugStream;
-	//private StringBuilder debugBuffer;
 	private SimpleDateFormat debugTimeFormat;
 		
 	/**
@@ -448,6 +486,7 @@ public class RestClient {
 		this.connectionProvider = new DefaultConnectionProvider();
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = null;
+		this.contentCache = null;
 	}
 	
 	/**
@@ -457,6 +496,7 @@ public class RestClient {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = null;
+		this.contentCache = null;
 	}
 	
 	/**
@@ -514,6 +554,7 @@ public class RestClient {
 		this.connectionProvider = connectionProvider;
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = errorHandler;
+		this.contentCache = null;
 		connectionInitializers.add(initializer);		
 	}
 	
@@ -530,10 +571,25 @@ public class RestClient {
 		this.connectionInitializers = new ArrayList<ConnectionInitializer>();
 		this.errorHandler = errorHandler;
 		this.debugStream = debugStream;
+		this.contentCache = null;
 		connectionInitializers.add(initializer);		
 	}
 	
 	// Public methods
+	/**
+	 * Set a content cache for the client.  Will be used to cache GET methods only.
+	 * @param cache
+	 */
+	public void setCache(HttpGETCache cache) {
+		this.contentCache = cache;
+	}
+	
+	/**
+	 * @return current ContentCache or null if not previously set.
+	 */
+	public HttpGETCache getCache() {
+		return contentCache;
+	}
 	
 	/**
 	 * @return ErrorHandler
@@ -633,8 +689,15 @@ public class RestClient {
 		if (debugStream != null)
 			debugBuffer = debugStart(httpUrl, method.toString());
 				
-		final HttpURLConnection connection = connectionProvider.getConnection(httpUrl);
-		connection.setRequestMethod(method.toString());
+		final HttpURLConnection connection;
+		
+		HttpGETCacheEntry cacheEntry = null;
+		if (method == HttpMethod.GET && contentCache != null && (cacheEntry = contentCache.get(url)) != null) {
+			connection = new CachedConnectionProvider(cacheEntry.getInputStream(), cacheEntry.getHeaders(), cacheEntry.getResponseCode());
+		} else {
+			connection = connectionProvider.getConnection(httpUrl);
+			connection.setRequestMethod(method.toString());
+		}
 		
 		for (ConnectionInitializer initializer : connectionInitializers)
 			initializer.initialize(connection);
@@ -773,9 +836,33 @@ public class RestClient {
 					return null;
 				}
 				
+				final InputStream inputStream = connection.getInputStream();
+				final int responseCode = connection.getResponseCode();
+				final Map<String, List<String>> headerFields = connection.getHeaderFields();
+				
+				if (contentCache != null) {
+					contentCache.put(url, new HttpGETCacheEntry() {
+						
+						@Override
+						public int getResponseCode() {
+							return responseCode;
+						}
+						
+						@Override
+						public InputStream getInputStream() {
+							return inputStream;
+						}
+						
+						@Override
+						public Map<String, List<String>> getHeaders() {
+							return headerFields;
+						}
+					});
+				}
+				
 				if (deserializer == null) {
 					// If no deserializer is specified, use String.
-					T response = (T) RestClient.STRING_DESERIALIZER.deserialize(connection.getInputStream(), 0, null);
+					T response = (T) RestClient.STRING_DESERIALIZER.deserialize(inputStream, 0, null);
 					done = true;
 					
 					if (responseBuffer != null) {
@@ -786,8 +873,7 @@ public class RestClient {
 					return response;
 				}
 				
-				T response = deserializer.deserialize(connection.getInputStream(), 
-						connection.getResponseCode(), connection.getHeaderFields());
+				T response = deserializer.deserialize(inputStream, responseCode, headerFields);
 				
 				done = true;
 				
@@ -1571,5 +1657,106 @@ public class RestClient {
 			this.emitDomain = value;
 			return this;
 		}
+	}
+	
+	/**
+	 * Mimics a HttpUrlConnection provider.  Acts as proxy between ContentCache and the request.
+	 *
+	 */
+	private final class CachedConnectionProvider extends HttpURLConnection {
+
+		private final InputStream content;
+		private final Map<String, List<String>> headers;
+		private final int responseCode;
+
+		public CachedConnectionProvider(InputStream content, Map<String, List<String>> headerFields, int responseCode) {
+			super(null);
+			this.content = content;			
+			this.headers = headerFields;
+			this.responseCode = responseCode;
+		}
+
+		@Override
+		public void setRequestMethod(String method) throws ProtocolException {
+			if (!method.equals("GET"))
+				throw new ProfileDataException(CachedConnectionProvider.class.getName() + " only supports GET.");
+		}
+		
+		@Override
+		public void setRequestProperty(String key, String value) {			
+		}
+		
+		@Override
+		public void addRequestProperty(String key, String value) {			
+		}
+		
+		@Override
+		public void setDoInput(boolean doinput) {			
+		}
+		
+		@Override
+		public void setDoOutput(boolean dooutput) {			
+		}
+		
+		@Override
+		public int getResponseCode() throws IOException {		
+			return responseCode;
+		}
+		
+		@Override
+		public InputStream getInputStream() throws IOException {
+			return content;
+		}		
+		
+		@Override
+		public Map<String, List<String>> getHeaderFields() {			
+			return headers;
+		}
+		
+		@Override
+		public String getHeaderField(int n) {		
+			throw new RuntimeException("Unimplemented.");
+		}
+		
+		@Override
+		public String getHeaderField(String name) {	
+			if (headers.containsKey(name))
+				return headers.get(name).iterator().next();
+			
+			return null;
+		}
+		
+		@Override
+		public long getHeaderFieldDate(String name, long Default) {
+			throw new RuntimeException("Unimplemented.");
+		}
+		
+		@Override
+		public int getHeaderFieldInt(String name, int Default) {
+			throw new RuntimeException("Unimplemented.");
+		}
+		
+		@Override
+		public String getHeaderFieldKey(int n) {
+			throw new RuntimeException("Unimplemented.");			
+		}
+		
+		public Map<String, List<String>> getHeaders() {
+			return headers;
+		}
+		
+		@Override
+		public void disconnect() {		
+		}
+
+		@Override
+		public boolean usingProxy() {		
+			return false;
+		}
+
+		@Override
+		public void connect() throws IOException {			
+		}
+		
 	}
 }
