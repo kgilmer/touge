@@ -364,12 +364,14 @@ public class RestClient {
 		}
 	}
 	
+	/**
+	 * Simple cache implementation using a HashMap backend.
+	 */
 	public static class HashMapCache implements RestClient.HttpGETCache {
-		private Object[] data;
-		private final int CONTENT_INDEX = 0;
-		private final int HEADERS_INDEX = 1;
-		private final int CODE_INDEX = 2;
-		private final Map<String, Object[]> cache = new HashMap<String, Object[]>();
+		protected final int CONTENT_INDEX = 0;
+		protected final int HEADERS_INDEX = 1;
+		protected final int CODE_INDEX = 2;
+		protected final Map<String, Object[]> cache = new HashMap<String, Object[]>();
 
 		@Override
 		public HttpGETCacheEntry get(final String key) {		
