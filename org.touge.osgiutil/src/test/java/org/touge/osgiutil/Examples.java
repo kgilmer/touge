@@ -49,7 +49,7 @@ public class Examples {
 			}
 			
 			@Override
-			public void allAvailable(Map<String, Object> services, Map<String, ServiceReference> references) {
+			public void allAvailable(Map<String, Object> services, Map<String, ServiceReference<?>> references) {
 				// The services map contains the complete set of services.  The key is the service name, the value is a reference to the service.
 				// The map of references can be used to access the properties associated with the services.
 			}
@@ -60,7 +60,7 @@ public class Examples {
 		OSGiUtil.onServices(context, Service2.class.getName(), null, new ServiceVisitor<Service2>() {
 
 			@Override
-			public void apply(ServiceReference sr, Service2 service) {
+			public void apply(ServiceReference<?> sr, Service2 service) {
 				//This method is called on all instances of Service2 in the registry at the time of call.
 			}
 			

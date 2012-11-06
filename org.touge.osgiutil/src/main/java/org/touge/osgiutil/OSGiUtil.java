@@ -62,7 +62,7 @@ public class OSGiUtil {
 		 * @param service
 		 *            service instance
 		 */
-		void apply(ServiceReference sr, T service);
+		void apply(ServiceReference<?> sr, T service);
 	}
 	
 	/**
@@ -77,7 +77,7 @@ public class OSGiUtil {
 		 * @param service
 		 *            service instance
 		 */
-		boolean match(ServiceReference sr, T service);
+		boolean match(ServiceReference<?> sr, T service);
 	}
 
 	/**
@@ -98,7 +98,7 @@ public class OSGiUtil {
 	 * 
 	 */
 	public interface ServiceFollower {
-		void allAvailable(Map<String, Object> services, Map<String, ServiceReference> references);
+		void allAvailable(Map<String, Object> services, Map<String, ServiceReference<?>> references);
 
 		void unavailable(Object service);
 	}
@@ -192,7 +192,7 @@ public class OSGiUtil {
 		try {
 			st = new ServiceTracker(context, context.createFilter(createFilter(Constants.OBJECTCLASS, services)), new ServiceTrackerCustomizer() {
 				Map<String, Object> servicesMap = new HashMap<String, Object>();
-				Map<String, ServiceReference> referencesMap = new HashMap<String, ServiceReference>();
+				Map<String, ServiceReference<?>> referencesMap = new HashMap<String, ServiceReference<?>>();
 
 				@Override
 				public void removedService(ServiceReference reference, Object service) {
@@ -247,12 +247,12 @@ public class OSGiUtil {
 	 * @return true if at least one service was found. False otherwise.
 	 */
 	public static <T> boolean onServices(BundleContext context, String service, String filter, ServiceVisitor<T> applicator) {
-		ServiceReference[] srefs;
+		ServiceReference<?>[] srefs;
 		try {
 			srefs = context.getServiceReferences(service, filter);
 
 			if (srefs != null && srefs.length > 0) {
-				for (ServiceReference sr : Arrays.asList(srefs))
+				for (ServiceReference<?> sr : Arrays.asList(srefs))
 					if (sr != null && service != null)
 						applicator.apply(sr, (T) context.getService(sr));
 
@@ -295,7 +295,7 @@ public class OSGiUtil {
 		if (context == null)
 			throw new IllegalArgumentException("BundleContext is not available.");
 
-		ServiceReference[] casr;
+		ServiceReference<?>[] casr;
 		try {
 			casr = context.getServiceReferences(service, filter);
 		} catch (InvalidSyntaxException e) {
@@ -330,7 +330,7 @@ public class OSGiUtil {
 		if (context == null)
 			throw new IllegalArgumentException("BundleContext is not available.");
 
-		ServiceReference[] casr;
+		ServiceReference<?>[] casr;
 		try {
 			casr = context.getServiceReferences(service, filter);
 		} catch (InvalidSyntaxException e) {
